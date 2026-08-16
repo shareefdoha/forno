@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, useMemo, useCallback } from 'react';
-import { supabase } from '../lib/supabase';
+import { supabase, SETUP_MESSAGE } from '../lib/supabase';
 
 const AuthContext = createContext(null);
 
@@ -9,6 +9,12 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     let active = true;
+
+    // No .env yet — stay signed out instead of crashing the whole app.
+    if (!supabase) {
+      setLoading(false);
+      return;
+    }
 
     supabase.auth.getSession().then(({ data }) => {
       if (!active) return;
@@ -28,12 +34,13 @@ export function AuthProvider({ children }) {
   }, []);
 
   const signIn = useCallback(async (email, password) => {
+    if (!supabase) throw new Error(SETUP_MESSAGE);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
   }, []);
 
   const signOut = useCallback(async () => {
-    await supabase.auth.signOut();
+    if (supabase) await supabase.auth.signOut();
   }, []);
 
   const value = useMemo(

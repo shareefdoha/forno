@@ -5,6 +5,7 @@ import { useCategories, useMenuItems } from '../hooks/useMenu';
 import CategoryTabs from './CategoryTabs';
 import MenuItem from './MenuItem';
 import { FULL_MENU_URL } from '../lib/constants';
+import { isSupabaseConfigured } from '../lib/supabase';
 
 /** The category the page opened on in the original build. */
 const DEFAULT_SLUG = 'pasta';
@@ -48,28 +49,42 @@ export default function MenuSection() {
           <p className="mt-5 text-cream/60">{t('menu.sub')}</p>
         </div>
 
-        {/* tabs */}
-        {categories.data?.length > 0 && (
-          <CategoryTabs categories={categories.data} activeId={activeId} onChange={setActiveId} />
-        )}
+        {/* Not connected to Supabase yet — show what to do rather than an
+            empty grid or a blank page. */}
+        {!isSupabaseConfigured ? (
+          <div className="glass-card mx-auto mt-12 max-w-xl rounded-3xl p-8 text-center">
+            <p className="eyebrow">Setup needed</p>
+            <p className="mt-4 text-sm leading-relaxed text-cream/70">
+              The menu loads from Supabase. Copy <code className="text-amber">.env.example</code> to{' '}
+              <code className="text-amber">.env</code>, add your project URL and anon key, then
+              restart the dev server.
+            </p>
+            <p className="mt-3 text-xs text-cream/40">Full walkthrough in SETUP.md</p>
+          </div>
+        ) : (
+          <>
+            {/* tabs */}
+            {categories.data?.length > 0 && (
+              <CategoryTabs categories={categories.data} activeId={activeId} onChange={setActiveId} />
+            )}
 
-        {/* grid */}
-        <div id="dishes" className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {isLoading && <SkeletonCards />}
+            {/* grid */}
+            <div id="dishes" className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {isLoading && <SkeletonCards />}
 
-          {!isLoading &&
-            visible.map((item, k) => (
-              // Re-keying on the active category replays the stagger animation
-              // the same way the old innerHTML swap did.
-              <MenuItem key={`${activeId}-${item.id}`} item={item} index={k} />
-            ))}
-        </div>
+              {!isLoading &&
+                visible.map((item, k) => (
+                  // Re-keying on the active category replays the stagger animation
+                  // the same way the old innerHTML swap did.
+                  <MenuItem key={`${activeId}-${item.id}`} item={item} index={k} />
+                ))}
+            </div>
 
-        {error && (
-          <p className="mt-10 text-center text-sm text-cream/50">{t('menu.error')}</p>
-        )}
-        {!isLoading && !error && visible.length === 0 && (
-          <p className="mt-10 text-center text-sm text-cream/50">{t('menu.empty')}</p>
+            {error && <p className="mt-10 text-center text-sm text-cream/50">{t('menu.error')}</p>}
+            {!isLoading && !error && visible.length === 0 && (
+              <p className="mt-10 text-center text-sm text-cream/50">{t('menu.empty')}</p>
+            )}
+          </>
         )}
 
         <div ref={footRef} className="reveal mt-14 text-center">

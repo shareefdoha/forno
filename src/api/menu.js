@@ -1,9 +1,9 @@
-import { supabase, IMAGE_BUCKET } from '../lib/supabase';
+import { requireSupabase, IMAGE_BUCKET } from '../lib/supabase';
 
 /* ══════════════════════════════ READ ══════════════════════════════ */
 
 export async function fetchCategories({ onlyActive = true } = {}) {
-  let q = supabase
+  let q = requireSupabase()
     .from('categories')
     .select('id, slug, name_en, name_ar, sort_order, is_active')
     .order('sort_order', { ascending: true });
@@ -21,7 +21,7 @@ export async function fetchCategories({ onlyActive = true } = {}) {
  * network round-trip on every tab click.
  */
 export async function fetchMenuItems({ categoryId = null } = {}) {
-  let q = supabase
+  let q = requireSupabase()
     .from('menu_items')
     .select(
       'id, category_id, name_en, name_ar, description_en, description_ar, price, image_url, image_path, is_available, sort_order',
@@ -49,20 +49,20 @@ export async function uploadMenuImage(file) {
   const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
   const path = `items/${Date.now()}-${SAFE(file.name.replace(/\.[^.]+$/, ''))}.${ext}`;
 
-  const { error } = await supabase.storage.from(IMAGE_BUCKET).upload(path, file, {
+  const { error } = await requireSupabase().storage.from(IMAGE_BUCKET).upload(path, file, {
     cacheControl: '31536000',
     upsert: false,
     contentType: file.type || undefined,
   });
   if (error) throw error;
 
-  const { data } = supabase.storage.from(IMAGE_BUCKET).getPublicUrl(path);
+  const { data } = requireSupabase().storage.from(IMAGE_BUCKET).getPublicUrl(path);
   return { url: data.publicUrl, path };
 }
 
 export async function removeMenuImage(path) {
   if (!path) return;
-  const { error } = await supabase.storage.from(IMAGE_BUCKET).remove([path]);
+  const { error } = await requireSupabase().storage.from(IMAGE_BUCKET).remove([path]);
   // A missing file should never block deleting the row it belonged to.
   if (error) console.warn('Could not remove image', path, error.message);
 }
@@ -70,13 +70,13 @@ export async function removeMenuImage(path) {
 /* ══════════════════════════════ WRITE ══════════════════════════════ */
 
 export async function createMenuItem(payload) {
-  const { data, error } = await supabase.from('menu_items').insert(payload).select().single();
+  const { data, error } = await requireSupabase().from('menu_items').insert(payload).select().single();
   if (error) throw error;
   return data;
 }
 
 export async function updateMenuItem(id, payload) {
-  const { data, error } = await supabase
+  const { data, error } = await requireSupabase()
     .from('menu_items')
     .update(payload)
     .eq('id', id)
@@ -87,7 +87,7 @@ export async function updateMenuItem(id, payload) {
 }
 
 export async function deleteMenuItem(item) {
-  const { error } = await supabase.from('menu_items').delete().eq('id', item.id);
+  const { error } = await requireSupabase().from('menu_items').delete().eq('id', item.id);
   if (error) throw error;
   // Only clean up images we uploaded ourselves (image_path is null for
   // the hot-linked forno-qa.site photos that came from the seed).
@@ -101,13 +101,13 @@ export async function setItemAvailability(id, isAvailable) {
 /* ─────────────────────────── categories ─────────────────────────── */
 
 export async function createCategory(payload) {
-  const { data, error } = await supabase.from('categories').insert(payload).select().single();
+  const { data, error } = await requireSupabase().from('categories').insert(payload).select().single();
   if (error) throw error;
   return data;
 }
 
 export async function updateCategory(id, payload) {
-  const { data, error } = await supabase
+  const { data, error } = await requireSupabase()
     .from('categories')
     .update(payload)
     .eq('id', id)
@@ -119,6 +119,6 @@ export async function updateCategory(id, payload) {
 
 export async function deleteCategory(id) {
   // ON DELETE CASCADE removes the category's items too.
-  const { error } = await supabase.from('categories').delete().eq('id', id);
+  const { error } = await requireSupabase().from('categories').delete().eq('id', id);
   if (error) throw error;
 }
