@@ -20,11 +20,14 @@ export default function MenuSection() {
 
   const [activeId, setActiveId] = useState(null);
 
-  // Once categories arrive, land on "Pasta" (or the first category if the
-  // owner renamed/removed it).
+  // Land on "Pasta" (or the first category if the owner renamed/removed it).
+  // Re-runs when the selected category disappears from the list — after a
+  // delete in the CMS, or when the preview data is replaced by Supabase —
+  // which would otherwise leave the grid permanently empty.
   useEffect(() => {
     const list = categories.data;
-    if (!list?.length || activeId) return;
+    if (!list?.length) return;
+    if (activeId && list.some((c) => c.id === activeId)) return;
     setActiveId((list.find((c) => c.slug === DEFAULT_SLUG) ?? list[0]).id);
   }, [categories.data, activeId]);
 

@@ -16,6 +16,8 @@ export default function Dashboard() {
   const [search, setSearch] = useState('');
   const [editing, setEditing] = useState(null);   // item object, or 'new'
   const [confirming, setConfirming] = useState(null);
+  // Writes fail silently otherwise — the optimistic toggle just flips back.
+  const [actionError, setActionError] = useState('');
 
   const catById = useMemo(
     () => Object.fromEntries((categories.data ?? []).map((c) => [c.id, c])),
@@ -52,6 +54,12 @@ export default function Dashboard() {
         <Stat label="Categories" value={(categories.data ?? []).length} />
         <Stat label="Out of stock" value={stats.out} />
       </div>
+
+      {actionError && (
+        <p className="mt-6 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+          {actionError}
+        </p>
+      )}
 
       {/* controls */}
       <div className="mt-8 flex flex-wrap items-center gap-3">
@@ -106,7 +114,13 @@ export default function Dashboard() {
 
             <AvailabilitySwitch
               checked={item.is_available}
-              onChange={(v) => toggle.mutate({ id: item.id, isAvailable: v })}
+              onChange={(v) => {
+                setActionError('');
+                toggle.mutate(
+                  { id: item.id, isAvailable: v },
+                  { onError: (err) => setActionError(err.message) },
+                );
+              }}
             />
 
             <div className="flex gap-2">
@@ -143,8 +157,14 @@ export default function Dashboard() {
           busy={del.isPending}
           onCancel={() => setConfirming(null)}
           onConfirm={async () => {
-            await del.mutateAsync(confirming);
-            setConfirming(null);
+            setActionError('');
+            try {
+              await del.mutateAsync(confirming);
+              setConfirming(null);
+            } catch (err) {
+              setActionError(err.message);
+              setConfirming(null);
+            }
           }}
         />
       )}

@@ -119,7 +119,13 @@ export default function Categories() {
                 </div>
 
                 <button
-                  onClick={() => update.mutate({ id: c.id, payload: { is_active: !c.is_active } })}
+                  onClick={() => {
+                    setError('');
+                    update.mutate(
+                      { id: c.id, payload: { is_active: !c.is_active } },
+                      { onError: (err) => setError(err.message) },
+                    );
+                  }}
                   className={`rounded-full border px-4 py-2 text-xs font-semibold transition ${
                     c.is_active
                       ? 'border-amber/40 text-amber'
@@ -152,7 +158,12 @@ export default function Categories() {
           busy={del.isPending}
           onCancel={() => setConfirming(null)}
           onConfirm={async () => {
-            await del.mutateAsync(confirming.id);
+            setError('');
+            try {
+              await del.mutateAsync(confirming.id);
+            } catch (err) {
+              setError(err.message);
+            }
             setConfirming(null);
           }}
         />
