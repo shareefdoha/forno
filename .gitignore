@@ -17,3 +17,4 @@ yarn-error.log*
 
 # Local helper, not part of the project
 push-to-github.cmd
+set-supabase-key.cmd
