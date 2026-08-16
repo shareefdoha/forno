@@ -1,10 +1,18 @@
-import { requireSupabase, isSupabaseConfigured, IMAGE_BUCKET } from '../lib/supabase';
+import {
+  requireSupabase, isSupabaseConfigured, isDemoBackend, IMAGE_BUCKET,
+} from '../lib/supabase';
 import { DEMO_CATEGORIES, DEMO_ITEMS } from '../lib/demoData';
+import * as local from '../lib/localBackend';
+
+/* Three modes, in priority order:
+     1. Supabase configured        → the real database
+     2. Dev, no .env               → local demo backend (editable, browser-only)
+     3. Production build, no .env  → read-only preview data                    */
 
 /* ══════════════════════════════ READ ══════════════════════════════ */
 
 export async function fetchCategories({ onlyActive = true } = {}) {
-  // No .env yet — serve the original static menu so the site is viewable.
+  if (isDemoBackend) return local.listCategories({ onlyActive });
   if (!isSupabaseConfigured) {
     return onlyActive ? DEMO_CATEGORIES.filter((c) => c.is_active) : DEMO_CATEGORIES;
   }
@@ -27,6 +35,7 @@ export async function fetchCategories({ onlyActive = true } = {}) {
  * network round-trip on every tab click.
  */
 export async function fetchMenuItems({ categoryId = null } = {}) {
+  if (isDemoBackend) return local.listItems({ categoryId });
   if (!isSupabaseConfigured) {
     return categoryId ? DEMO_ITEMS.filter((i) => i.category_id === categoryId) : DEMO_ITEMS;
   }
@@ -56,6 +65,8 @@ const SAFE = (s) => s.toLowerCase().replace(/[^a-z0-9.]+/g, '-').replace(/^-|-$/
  * the object path (stored in image_path so the old file can be removed).
  */
 export async function uploadMenuImage(file) {
+  if (isDemoBackend) return local.storeImage(file);
+
   const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
   const path = `items/${Date.now()}-${SAFE(file.name.replace(/\.[^.]+$/, ''))}.${ext}`;
 
@@ -71,7 +82,7 @@ export async function uploadMenuImage(file) {
 }
 
 export async function removeMenuImage(path) {
-  if (!path) return;
+  if (!path || isDemoBackend) return;
   const { error } = await requireSupabase().storage.from(IMAGE_BUCKET).remove([path]);
   // A missing file should never block deleting the row it belonged to.
   if (error) console.warn('Could not remove image', path, error.message);
@@ -80,12 +91,16 @@ export async function removeMenuImage(path) {
 /* ══════════════════════════════ WRITE ══════════════════════════════ */
 
 export async function createMenuItem(payload) {
+  if (isDemoBackend) return local.createItem(payload);
+
   const { data, error } = await requireSupabase().from('menu_items').insert(payload).select().single();
   if (error) throw error;
   return data;
 }
 
 export async function updateMenuItem(id, payload) {
+  if (isDemoBackend) return local.updateItem(id, payload);
+
   const { data, error } = await requireSupabase()
     .from('menu_items')
     .update(payload)
@@ -97,6 +112,8 @@ export async function updateMenuItem(id, payload) {
 }
 
 export async function deleteMenuItem(item) {
+  if (isDemoBackend) return local.deleteItem(item);
+
   const { error } = await requireSupabase().from('menu_items').delete().eq('id', item.id);
   if (error) throw error;
   // Only clean up images we uploaded ourselves (image_path is null for
@@ -111,12 +128,16 @@ export async function setItemAvailability(id, isAvailable) {
 /* ─────────────────────────── categories ─────────────────────────── */
 
 export async function createCategory(payload) {
+  if (isDemoBackend) return local.createCategory(payload);
+
   const { data, error } = await requireSupabase().from('categories').insert(payload).select().single();
   if (error) throw error;
   return data;
 }
 
 export async function updateCategory(id, payload) {
+  if (isDemoBackend) return local.updateCategory(id, payload);
+
   const { data, error } = await requireSupabase()
     .from('categories')
     .update(payload)
@@ -128,6 +149,8 @@ export async function updateCategory(id, payload) {
 }
 
 export async function deleteCategory(id) {
+  if (isDemoBackend) return local.deleteCategory(id);
+
   // ON DELETE CASCADE removes the category's items too.
   const { error } = await requireSupabase().from('categories').delete().eq('id', id);
   if (error) throw error;

@@ -10,6 +10,13 @@ const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
  */
 export const isSupabaseConfigured = Boolean(url && anonKey);
 
+/**
+ * The browser-storage stand-in in ./localBackend.js. Requires DEV, so a
+ * production build can never fall back to it no matter what .env says —
+ * its demo password must never be a way into a deployed site.
+ */
+export const isDemoBackend = import.meta.env.DEV && !isSupabaseConfigured;
+
 export const SETUP_MESSAGE =
   'Supabase is not configured yet. Copy .env.example to .env, fill in ' +
   'VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY, then restart `npm run dev`. ' +

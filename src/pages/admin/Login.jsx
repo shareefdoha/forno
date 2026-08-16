@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { isDemoBackend } from '../../lib/supabase';
+import { DEMO_EMAIL, DEMO_PASSWORD } from '../../lib/localBackend';
 
 export default function Login() {
   const { session, loading, signIn } = useAuth();
@@ -40,6 +42,26 @@ export default function Login() {
 
         <p className="eyebrow mt-8">Admin</p>
         <h1 className="mt-3 font-display text-3xl">Sign in to the CMS</h1>
+
+        {isDemoBackend && (
+          <div className="mt-6 rounded-2xl border border-amber/25 bg-amber/[.06] p-4 text-xs leading-relaxed text-cream/65">
+            <p className="font-semibold text-amber">Demo backend (dev only)</p>
+            <p className="mt-2">
+              Sign in with <code className="text-amber">{DEMO_EMAIL}</code> /{' '}
+              <code className="text-amber">{DEMO_PASSWORD}</code>
+            </p>
+            <p className="mt-2 text-cream/45">
+              Changes save to this browser only and are lost when you connect Supabase.
+            </p>
+            <button
+              type="button"
+              onClick={() => { setEmail(DEMO_EMAIL); setPassword(DEMO_PASSWORD); }}
+              className="mt-3 underline underline-offset-4 hover:text-amber transition"
+            >
+              Fill these in
+            </button>
+          </div>
+        )}
 
         <form className="mt-8 space-y-5" onSubmit={onSubmit}>
           <div>

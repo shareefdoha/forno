@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState, useMemo, useCallback } from 'react';
-import { supabase, SETUP_MESSAGE } from '../lib/supabase';
+import { supabase, isDemoBackend, SETUP_MESSAGE } from '../lib/supabase';
+import * as local from '../lib/localBackend';
 
 const AuthContext = createContext(null);
 
@@ -9,6 +10,13 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     let active = true;
+
+    // Dev with no .env — restore the demo session from localStorage.
+    if (isDemoBackend) {
+      setSession(local.getSession());
+      setLoading(false);
+      return;
+    }
 
     // No .env yet — stay signed out instead of crashing the whole app.
     if (!supabase) {
@@ -34,12 +42,21 @@ export function AuthProvider({ children }) {
   }, []);
 
   const signIn = useCallback(async (email, password) => {
+    if (isDemoBackend) {
+      setSession(local.signIn(email, password));
+      return;
+    }
     if (!supabase) throw new Error(SETUP_MESSAGE);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
   }, []);
 
   const signOut = useCallback(async () => {
+    if (isDemoBackend) {
+      local.signOut();
+      setSession(null);
+      return;
+    }
     if (supabase) await supabase.auth.signOut();
   }, []);
 

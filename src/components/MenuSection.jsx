@@ -5,7 +5,7 @@ import { useCategories, useMenuItems } from '../hooks/useMenu';
 import CategoryTabs from './CategoryTabs';
 import MenuItem from './MenuItem';
 import { FULL_MENU_URL } from '../lib/constants';
-import { isSupabaseConfigured } from '../lib/supabase';
+import { isSupabaseConfigured, isDemoBackend } from '../lib/supabase';
 
 /** The category the page opened on in the original build. */
 const DEFAULT_SLUG = 'pasta';
@@ -56,8 +56,10 @@ export default function MenuSection() {
             plainly so nobody mistakes this for a live CMS. */}
         {!isSupabaseConfigured && (
           <p className="mx-auto mt-10 max-w-xl rounded-2xl border border-amber/25 bg-amber/[.06] px-5 py-3 text-center text-xs leading-relaxed text-cream/60">
-            Preview data — edits in the CMS won’t save yet. Connect Supabase in{' '}
-            <code className="text-amber">.env</code> to go live. See SETUP.md
+            {isDemoBackend
+              ? 'Demo backend — edits made in /admin show up here, but save to this browser only.'
+              : 'Preview data — read-only.'}{' '}
+            Connect Supabase in <code className="text-amber">.env</code> to go live. See SETUP.md
           </p>
         )}
 
