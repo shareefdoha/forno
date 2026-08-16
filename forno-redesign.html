@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr" class="scroll-smooth">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Forno — Wood-Fired Italian in Al Rayyan, Qatar</title>
+<meta name="description" content="Forno brings authentic Italian flavours to Al Rayyan — hand-made pasta, wood-fired pizza and risotto, served daily from 1 PM to 4 AM." />
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..700&family=Manrope:wght@300;400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        ink:    '#0B0B0C',
+        char:   '#17181A',
+        stone:  '#212529',
+        amber:  '#FFC107',
+        ember:  '#E08A00',
+        cream:  '#F3EDE2',
+        muted:  '#9A948A',
+      },
+      fontFamily: {
+        display: ['"Bodoni Moda"', 'serif'],
+        sans:    ['Manrope', 'system-ui', 'sans-serif'],
+        ar:      ['"IBM Plex Sans Arabic"', 'sans-serif'],
+      },
+      maxWidth: { shell: '1240px' },
+    }
+  }
+}
+</script>
+
+<style>
+  :root { --nav-h: 76px; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { background: #0B0B0C; }
+
+  /* ── Signature: the oven arch. Forno means oven; every image sits in one. ── */
+  .arch      { border-radius: 46% 46% 10px 10px / 20% 20% 2% 2%; }
+  .arch-wide { border-radius: 50% 50% 16px 16px / 16% 16% 2% 2%; }
+  .arch-tall { border-radius: 50% 50% 12px 12px / 28% 28% 2% 2%; }
+
+  /* Ember glow behind the hero — the heat coming off the oven mouth */
+  .ember {
+    background: radial-gradient(58% 46% at 50% 104%, rgba(255,193,7,.30), rgba(224,138,0,.12) 42%, transparent 72%);
+    animation: flicker 6s ease-in-out infinite;
+  }
+  @keyframes flicker { 0%,100% { opacity:.8 } 40% { opacity:1 } 70% { opacity:.88 } }
+
+  .glass {
+    background: rgba(11,11,12,.62);
+    backdrop-filter: blur(18px) saturate(140%);
+    -webkit-backdrop-filter: blur(18px) saturate(140%);
+    border-bottom: 1px solid rgba(243,237,226,.08);
+  }
+  .glass-card {
+    background: linear-gradient(160deg, rgba(243,237,226,.055), rgba(243,237,226,.015));
+    border: 1px solid rgba(243,237,226,.09);
+    backdrop-filter: blur(10px);
+  }
+
+  .rule { height:1px; background: linear-gradient(90deg, transparent, rgba(255,193,7,.45), transparent); }
+
+  .eyebrow {
+    font-size: .72rem; letter-spacing: .34em; text-transform: uppercase;
+    font-weight: 600; color: #FFC107;
+  }
+.h-15{height: 4rem;}
+
+  .btn-amber {
+    background: linear-gradient(135deg, #FFC107, #E08A00);
+    color: #0B0B0C; box-shadow: 0 10px 34px -12px rgba(255,193,7,.75);
+  }
+  .btn-amber:hover { box-shadow: 0 16px 44px -12px rgba(255,193,7,.95); transform: translateY(-2px); }
+  .btn-ghost { border:1px solid rgba(243,237,226,.28); color:#F3EDE2 }
+  .btn-ghost:hover { border-color:#FFC107; color:#FFC107; transform: translateY(-2px) }
+
+  /* Scroll reveal */
+  .reveal { opacity:0; transform: translateY(26px); }
+  .reveal.in {
+    opacity:1; transform:none;
+    transition: opacity .85s cubic-bezier(.16,1,.3,1), transform .85s cubic-bezier(.16,1,.3,1);
+    transition-delay: var(--d, 0ms);
+  }
+
+  /* Hero load sequence */
+  .lift { opacity:0; transform: translateY(28px); animation: lift .95s cubic-bezier(.16,1,.3,1) forwards; animation-delay: var(--d,0ms) }
+  @keyframes lift { to { opacity:1; transform:none } }
+
+  .dish:hover .dish-img { transform: scale(1.07) }
+  .dish-img { transition: transform .7s cubic-bezier(.16,1,.3,1) }
+
+  .tab-active { color:#0B0B0C; background: linear-gradient(135deg,#FFC107,#E08A00); border-color: transparent }
+
+  .noscroll::-webkit-scrollbar { display:none }
+  .noscroll { scrollbar-width:none }
+
+  :focus-visible { outline: 2px solid #FFC107; outline-offset: 3px; border-radius: 4px }
+
+  [dir="rtl"] body, [dir="rtl"] .font-display { font-family: "IBM Plex Sans Arabic", sans-serif }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important }
+    .reveal { opacity:1; transform:none }
+    .lift  { opacity:1; transform:none }
+    #dishes > a, #reviews blockquote { opacity:1 !important }
+  }
+</style>
+</head>
+
+<body class="bg-ink text-cream font-sans antialiased selection:bg-amber selection:text-ink">
+
+<!-- ════════════════ HEADER ════════════════ -->
+<header id="nav" class="fixed inset-x-0 top-0 z-50 glass transition-all duration-500">
+  <div class="mx-auto max-w-shell px-5 lg:px-8">
+    <div class="flex h-[76px] items-center justify-between gap-6">
+
+      <a href="#top" class="flex items-center gap-3 shrink-0">
+        <img src="img/logo.png" alt="Forno" class="h-15 w-auto" />
+        <span class="font-display text-3xl tracking-[.16em] text-cream">FORNO</span>
+      </a>
+
+      <nav class="hidden lg:flex items-center gap-9 text-[.92rem] font-medium text-cream/75">
+        <a href="#top"     class="hover:text-amber transition" data-i18n="nav.home">Home</a>
+        <a href="#story"   class="hover:text-amber transition" data-i18n="nav.story">Our Story</a>
+        <a href="#menu"    class="hover:text-amber transition" data-i18n="nav.menu">Menu</a>
+        <a href="#why"     class="hover:text-amber transition" data-i18n="nav.why">Why Forno</a>
+        <a href="#contact" class="hover:text-amber transition" data-i18n="nav.contact">Visit Us</a>
+      </nav>
+
+      <div class="flex items-center gap-3">
+        <a href="tel:+97440020250" class="hidden xl:flex items-center gap-2 text-sm text-cream/70 hover:text-amber transition">
+          <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106a1.125 1.125 0 00-1.173.417l-.97 1.293a.75.75 0 01-.92.266 12.043 12.043 0 01-6.16-6.16.75.75 0 01.266-.92l1.293-.97c.375-.281.53-.769.417-1.173L6.963 3.102A1.125 1.125 0 005.872 2.25H4.5A2.25 2.25 0 002.25 4.5v2.25z"/></svg>
+          <span dir="ltr">4002 0250</span>
+        </a>
+
+        <button id="langBtn" class="rounded-full border border-cream/20 px-3 py-1.5 text-xs font-semibold tracking-widest text-cream/70 hover:border-amber hover:text-amber transition">AR</button>
+
+        <button data-book class="btn-amber hidden sm:inline-flex rounded-full px-5 py-2.5 text-sm font-bold tracking-wide transition-all duration-300" data-i18n="cta.book">Book a Table</button>
+
+        <button id="burger" aria-label="Open menu" class="lg:hidden rounded-full border border-cream/20 p-2.5">
+          <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" d="M4 7h16M4 12h16M4 17h16"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- mobile drawer -->
+  <div id="drawer" class="lg:hidden hidden border-t border-cream/10 bg-ink/95 backdrop-blur-xl">
+    <div class="mx-auto max-w-shell px-5 py-6 flex flex-col gap-1">
+      <a href="#top"     class="rounded-xl px-3 py-3 text-cream/80 hover:bg-cream/5" data-i18n="nav.home">Home</a>
+      <a href="#story"   class="rounded-xl px-3 py-3 text-cream/80 hover:bg-cream/5" data-i18n="nav.story">Our Story</a>
+      <a href="#menu"    class="rounded-xl px-3 py-3 text-cream/80 hover:bg-cream/5" data-i18n="nav.menu">Menu</a>
+      <a href="#why"     class="rounded-xl px-3 py-3 text-cream/80 hover:bg-cream/5" data-i18n="nav.why">Why Forno</a>
+      <a href="#contact" class="rounded-xl px-3 py-3 text-cream/80 hover:bg-cream/5" data-i18n="nav.contact">Visit Us</a>
+      <button data-book class="btn-amber mt-3 rounded-full px-5 py-3 text-sm font-bold" data-i18n="cta.book">Book a Table</button>
+    </div>
+  </div>
+</header>
+
+<!-- ════════════════ HERO ════════════════ -->
+<section id="top" class="relative min-h-[100svh] overflow-hidden pt-[var(--nav-h)]">
+  <img src="https://forno-qa.site/imgWeb/restaurant-interior.webp" alt="Inside Forno" class="absolute inset-0 h-full w-full object-cover" />
+  <div class="absolute inset-0 bg-gradient-to-b from-ink/85 via-ink/70 to-ink"></div>
+  <div class="ember pointer-events-none absolute inset-x-0 bottom-0 h-[70%]"></div>
+
+  <div class="relative mx-auto flex max-w-shell flex-col items-center px-5 pb-24 pt-16 text-center lg:pt-24">
+    <p class="eyebrow lift" style="--d:120ms" data-i18n="hero.eyebrow">Al Rayyan · Qatar · Since 2015</p>
+
+    <h1 class="lift mt-6 font-display text-[clamp(2.6rem,8vw,5.6rem)] font-medium leading-[1.02] tracking-[-.01em]" style="--d:240ms">
+      <span data-i18n="hero.l1">Ten years of fire,</span><br />
+      <span class="italic text-amber" data-i18n="hero.l2">flour and patience.</span>
+    </h1>
+
+    <p class="lift mt-7 max-w-2xl text-base leading-relaxed text-cream/70 sm:text-lg" style="--d:380ms" data-i18n="hero.sub">
+      Hand-rolled pasta, wood-fired pizza and slow-stirred risotto — Italian cooking done the long way, in the heart of Al Wajbah. Open every day until 4 AM.
+    </p>
+
+    <div class="lift mt-10 flex flex-col items-center gap-3 sm:flex-row" style="--d:500ms">
+      <button data-book class="btn-amber w-full rounded-full px-8 py-4 text-sm font-bold tracking-wide transition-all duration-300 sm:w-auto" data-i18n="cta.book">Book a Table</button>
+      <a href="#menu" class="btn-ghost w-full rounded-full px-8 py-4 text-center text-sm font-semibold tracking-wide transition-all duration-300 sm:w-auto" data-i18n="cta.menu">Explore the Menu</a>
+    </div>
+
+    <!-- arch strip: three plates framed by the oven mouth -->
+    <div class="lift mt-16 grid w-full max-w-3xl grid-cols-3 gap-4 sm:gap-6" style="--d:640ms">
+      <div class="arch-tall overflow-hidden border border-cream/10">
+        <img src="https://forno-qa.site/imgPro/1770839789.jpg" alt="Ranch chicken pizza" class="h-32 w-full object-cover sm:h-44" />
+      </div>
+      <div class="arch-tall overflow-hidden border border-amber/30 sm:-translate-y-6">
+        <img src="https://forno-qa.site/imgPro/1747246876.jpg" alt="Polo Forno pasta" class="h-32 w-full object-cover sm:h-44" />
+      </div>
+      <div class="arch-tall overflow-hidden border border-cream/10">
+        <img src="https://forno-qa.site/imgPro/1747247123.jpg" alt="Seafood risotto" class="h-32 w-full object-cover sm:h-44" />
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════ STORY ════════════════ -->
+<section id="story" class="relative border-t border-cream/[.06] bg-gradient-to-b from-ink via-char to-ink py-24 lg:py-32">
+  <div class="mx-auto max-w-shell px-5 lg:px-8">
+    <div class="grid items-center gap-14 lg:grid-cols-2 lg:gap-20">
+
+      <div class="reveal order-2 lg:order-1">
+        <p class="eyebrow" data-i18n="story.eyebrow">Our Story</p>
+        <h2 class="mt-5 font-display text-[clamp(2rem,4.5vw,3.4rem)] leading-[1.1]">
+          <span data-i18n="story.h1">A single oven, and a</span>
+          <span class="italic text-amber" data-i18n="story.h2">stubborn idea.</span>
+        </h2>
+        <div class="rule my-8 max-w-[220px]"></div>
+        <p class="text-cream/70 leading-relaxed" data-i18n="story.p1">
+          Forno started with one wood-fired oven and a refusal to cut corners. Dough rested overnight. Sauces reduced for hours. Nothing left the pass until it was right.
+        </p>
+        <p class="mt-5 text-cream/70 leading-relaxed" data-i18n="story.p2">
+          A decade later the recipes haven't changed — only the number of people at the table. Our kitchen still shapes every pasta by hand, still fires every pizza on stone, and still stays open long after the city goes quiet.
+        </p>
+
+        <div class="mt-12 grid grid-cols-2 gap-x-6 gap-y-9 sm:grid-cols-4">
+          <div><p class="font-display text-4xl text-amber" data-count="10" data-suffix="+">0</p><p class="mt-1 text-xs uppercase tracking-[.18em] text-cream/50" data-i18n="stat.years">Years</p></div>
+          <div><p class="font-display text-4xl text-amber" data-count="50" data-suffix="k+">0</p><p class="mt-1 text-xs uppercase tracking-[.18em] text-cream/50" data-i18n="stat.guests">Happy Guests</p></div>
+          <div><p class="font-display text-4xl text-amber" data-count="15" data-suffix="">0</p><p class="mt-1 text-xs uppercase tracking-[.18em] text-cream/50" data-i18n="stat.cats">Categories</p></div>
+          <div><p class="font-display text-4xl text-amber" data-count="80" data-suffix="+">0</p><p class="mt-1 text-xs uppercase tracking-[.18em] text-cream/50" data-i18n="stat.dishes">Dishes</p></div>
+        </div>
+      </div>
+
+      <div class="reveal order-1 lg:order-2" style="--d:150ms">
+        <div class="relative">
+          <div class="arch-wide overflow-hidden border border-cream/10">
+            <img src="https://forno-qa.site/imgGalary/1747310669.png" alt="Grilled chicken with mushroom sauce" class="h-[420px] w-full object-cover sm:h-[520px]" />
+          </div>
+          <div class="absolute -bottom-8 right-4 hidden w-44 overflow-hidden rounded-2xl border border-amber/30 shadow-2xl sm:block lg:-right-8">
+            <img src="https://forno-qa.site/imgGalary/1747308779.jpg" alt="Forno catering carts" class="h-32 w-full object-cover" />
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════ MENU ════════════════ -->
+<section id="menu" class="relative border-t border-cream/[.06] py-24 lg:py-32">
+  <div class="mx-auto max-w-shell px-5 lg:px-8">
+
+    <div class="reveal mx-auto max-w-2xl text-center">
+      <p class="eyebrow" data-i18n="menu.eyebrow">The Menu</p>
+      <h2 class="mt-5 font-display text-[clamp(2rem,4.5vw,3.4rem)] leading-[1.1]">
+        <span data-i18n="menu.h1">Fifteen categories.</span>
+        <span class="italic text-amber" data-i18n="menu.h2">One standard.</span>
+      </h2>
+      <p class="mt-5 text-cream/60" data-i18n="menu.sub">Prices in Qatari Riyal. Tap a dish to add it to your WhatsApp order.</p>
+    </div>
+
+    <!-- tabs -->
+    <div class="reveal noscroll mt-12 flex gap-2 overflow-x-auto pb-2 sm:justify-center sm:flex-wrap" id="tabs"></div>
+
+    <!-- grid -->
+    <div id="dishes" class="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3"></div>
+
+    <div class="reveal mt-14 text-center">
+      <a href="https://forno-qa.site/menu" target="_blank" rel="noopener" class="btn-ghost inline-flex rounded-full px-8 py-4 text-sm font-semibold tracking-wide transition-all duration-300" data-i18n="menu.full">View the Full Menu</a>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════ WHY FORNO ════════════════ -->
+<section id="why" class="relative border-t border-cream/[.06] bg-gradient-to-b from-ink via-char to-ink py-24 lg:py-32">
+  <div class="mx-auto max-w-shell px-5 lg:px-8">
+    <div class="reveal mx-auto max-w-2xl text-center">
+      <p class="eyebrow" data-i18n="why.eyebrow">Why Forno</p>
+      <h2 class="mt-5 font-display text-[clamp(2rem,4.5vw,3.4rem)] leading-[1.1]" data-i18n="why.h">What you can count on, every visit.</h2>
+    </div>
+
+    <div class="mt-16 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+      <div class="reveal glass-card group rounded-3xl p-8 transition-all duration-500 hover:border-amber/40 hover:-translate-y-1.5">
+        <div class="mb-6 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-amber/12 text-amber transition group-hover:bg-amber group-hover:text-ink">
+          <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.362 5.214A8.252 8.252 0 0112 21 8.25 8.25 0 016.038 7.048 8.287 8.287 0 009 9.6a8.983 8.983 0 013.361-6.867 8.21 8.21 0 003 2.48z"/></svg>
+        </div>
+        <h3 class="font-display text-2xl" data-i18n="why.1t">Fired on stone</h3>
+        <p class="mt-3 text-sm leading-relaxed text-cream/60" data-i18n="why.1d">Every pizza goes straight onto the oven floor — blistered crust, molten centre, ninety seconds.</p>
+      </div>
+
+      <div class="reveal glass-card group rounded-3xl p-8 transition-all duration-500 hover:border-amber/40 hover:-translate-y-1.5" style="--d:100ms">
+        <div class="mb-6 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-amber/12 text-amber transition group-hover:bg-amber group-hover:text-ink">
+          <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </div>
+        <h3 class="font-display text-2xl" data-i18n="why.2t">Made the same day</h3>
+        <p class="mt-3 text-sm leading-relaxed text-cream/60" data-i18n="why.2d">Dough, sauces and stocks are prepared fresh each morning. Nothing sits, nothing is frozen.</p>
+      </div>
+
+      <div class="reveal glass-card group rounded-3xl p-8 transition-all duration-500 hover:border-amber/40 hover:-translate-y-1.5" style="--d:200ms">
+        <div class="mb-6 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-amber/12 text-amber transition group-hover:bg-amber group-hover:text-ink">
+          <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751A11.959 11.959 0 0112 2.714z"/></svg>
+        </div>
+        <h3 class="font-display text-2xl" data-i18n="why.3t">A kitchen you can see</h3>
+        <p class="mt-3 text-sm leading-relaxed text-cream/60" data-i18n="why.3d">Open pass, colour-coded stations and daily hygiene checks — the standard is the same whether you're watching or not.</p>
+      </div>
+
+      <div class="reveal glass-card group rounded-3xl p-8 transition-all duration-500 hover:border-amber/40 hover:-translate-y-1.5" style="--d:300ms">
+        <div class="mb-6 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-amber/12 text-amber transition group-hover:bg-amber group-hover:text-ink">
+          <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9 9 0 100-18 9 9 0 000 18zM8.25 10.5h.008M15.75 10.5h.008M8.5 15a5 5 0 007 0"/></svg>
+        </div>
+        <h3 class="font-display text-2xl" data-i18n="why.4t">Room for the long table</h3>
+        <p class="mt-3 text-sm leading-relaxed text-cream/60" data-i18n="why.4d">Warm lighting, family seating and full outside catering — from a quiet dinner to two hundred guests.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════ REVIEWS ════════════════ -->
+<section class="relative border-t border-cream/[.06] py-24 lg:py-28">
+  <div class="mx-auto max-w-4xl px-5 text-center">
+    <p class="eyebrow reveal" data-i18n="rev.eyebrow">Guest Reviews</p>
+
+    <div id="reviews" class="reveal relative mt-10 min-h-[230px] sm:min-h-[200px]"></div>
+
+    <div id="dots" class="mt-8 flex justify-center gap-2.5"></div>
+  </div>
+</section>
+
+<!-- ════════════════ CONTACT ════════════════ -->
+<section id="contact" class="relative border-t border-cream/[.06] bg-gradient-to-b from-char to-ink py-24 lg:py-32">
+  <div class="mx-auto max-w-shell px-5 lg:px-8">
+    <div class="grid gap-12 lg:grid-cols-[1.05fr_.95fr] lg:gap-16">
+
+      <!-- left: details + map -->
+      <div class="reveal">
+        <p class="eyebrow" data-i18n="ct.eyebrow">Visit Us</p>
+        <h2 class="mt-5 font-display text-[clamp(2rem,4.5vw,3.2rem)] leading-[1.1]">
+          <span data-i18n="ct.h1">Al Wajbah Service St,</span><br /><span class="italic text-amber" data-i18n="ct.h2">Al Rayyan.</span>
+        </h2>
+
+        <dl class="mt-10 space-y-6">
+          <div class="flex gap-4">
+            <span class="mt-0.5 text-amber"><svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21s7.5-6.3 7.5-11.25a7.5 7.5 0 10-15 0C4.5 14.7 12 21 12 21z"/><circle cx="12" cy="9.75" r="2.25"/></svg></span>
+            <div><dt class="text-xs uppercase tracking-[.18em] text-cream/45" data-i18n="ct.addr">Address</dt>
+            <dd class="mt-1 text-cream/85">Al Wajbah Service St, Al Rayyan, Qatar</dd></div>
+          </div>
+          <div class="flex gap-4">
+            <span class="mt-0.5 text-amber"><svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106a1.125 1.125 0 00-1.173.417l-.97 1.293a.75.75 0 01-.92.266 12.043 12.043 0 01-6.16-6.16.75.75 0 01.266-.92l1.293-.97c.375-.281.53-.769.417-1.173L6.963 3.102A1.125 1.125 0 005.872 2.25H4.5A2.25 2.25 0 002.25 4.5v2.25z"/></svg></span>
+            <div><dt class="text-xs uppercase tracking-[.18em] text-cream/45" data-i18n="ct.phone">Phone</dt>
+            <dd class="mt-1 flex flex-wrap gap-x-5 text-cream/85" dir="ltr">
+              <a href="tel:+97440020250" class="hover:text-amber transition">4002 0250</a>
+              <a href="tel:+97430585876" class="hover:text-amber transition">3058 5876</a>
+            </dd></div>
+          </div>
+          <div class="flex gap-4">
+            <span class="mt-0.5 text-amber"><svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path stroke-linecap="round" d="M12 7.5V12l3 1.75"/></svg></span>
+            <div><dt class="text-xs uppercase tracking-[.18em] text-cream/45" data-i18n="ct.hours">Opening Hours</dt>
+            <dd class="mt-1 text-cream/85" data-i18n="ct.hoursv">Every day · 1:00 PM — 4:00 AM</dd></div>
+          </div>
+        </dl>
+
+        <div class="mt-8 flex flex-wrap gap-3">
+          <a href="https://www.instagram.com/forno_qtr" target="_blank" rel="noopener" aria-label="Instagram" class="glass-card flex h-11 w-11 items-center justify-center rounded-full transition hover:border-amber/50 hover:text-amber">
+            <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.16c3.2 0 3.58.01 4.85.07 3.25.15 4.77 1.69 4.92 4.92.06 1.27.07 1.65.07 4.85s-.01 3.58-.07 4.85c-.15 3.23-1.66 4.77-4.92 4.92-1.27.06-1.64.07-4.85.07s-3.58-.01-4.85-.07c-3.26-.15-4.77-1.7-4.92-4.92-.06-1.27-.07-1.64-.07-4.85s.01-3.58.07-4.85C2.38 3.92 3.89 2.38 7.15 2.23 8.42 2.17 8.8 2.16 12 2.16zm0 5.68a4.16 4.16 0 100 8.32 4.16 4.16 0 000-8.32zm0 6.86a2.7 2.7 0 110-5.4 2.7 2.7 0 010 5.4zm4.33-7.03a.97.97 0 100-1.95.97.97 0 000 1.95z"/></svg>
+          </a>
+          <a href="https://www.facebook.com/forno" target="_blank" rel="noopener" aria-label="Facebook" class="glass-card flex h-11 w-11 items-center justify-center rounded-full transition hover:border-amber/50 hover:text-amber">
+            <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24"><path d="M13.5 21v-8h2.7l.4-3.1h-3.1V7.9c0-.9.25-1.5 1.55-1.5h1.65V3.63c-.29-.04-1.27-.13-2.4-.13-2.38 0-4 1.45-4 4.11V9.9H7.5V13h2.8v8h3.2z"/></svg>
+          </a>
+          <a href="https://wa.me/message/EKRHCWZ6IICUP1" target="_blank" rel="noopener" aria-label="WhatsApp" class="glass-card flex h-11 w-11 items-center justify-center rounded-full transition hover:border-amber/50 hover:text-amber">
+            <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12.04 2C6.6 2 2.2 6.4 2.2 11.85c0 1.74.46 3.44 1.32 4.93L2.1 22l5.36-1.4a9.8 9.8 0 004.58 1.14h.01c5.43 0 9.84-4.4 9.84-9.85C21.89 6.4 17.48 2 12.04 2zm5.73 14.02c-.24.68-1.4 1.3-1.94 1.34-.5.05-1.13.07-1.83-.11-.42-.13-.96-.31-1.66-.61-2.92-1.26-4.82-4.2-4.97-4.4-.14-.2-1.19-1.58-1.19-3.02 0-1.43.75-2.13 1.02-2.42.27-.29.58-.36.78-.36h.56c.18 0 .42-.07.66.5.24.59.82 2.02.9 2.16.07.15.12.32.02.51-.1.2-.15.32-.29.49-.15.17-.31.38-.44.51-.15.15-.3.3-.13.59.17.29.76 1.25 1.62 2.02 1.11.99 2.05 1.3 2.34 1.44.29.15.46.12.63-.07.17-.2.73-.85.92-1.14.2-.29.39-.24.66-.15.27.1 1.7.8 1.99.95.29.15.48.22.55.34.07.12.07.68-.17 1.36z"/></svg>
+          </a>
+          <a href="https://maps.app.goo.gl/5qjJR9DAZ8FEp9wdA" target="_blank" rel="noopener" class="glass-card flex h-11 items-center rounded-full px-5 text-sm font-medium transition hover:border-amber/50 hover:text-amber" data-i18n="ct.dir">Get Directions</a>
+        </div>
+
+        <div class="reveal mt-10 overflow-hidden rounded-3xl border border-cream/10">
+          <iframe
+            title="Forno location"
+            src="https://www.google.com/maps?q=Al%20Wajbah%20Service%20Street%2C%20Al%20Rayyan%2C%20Qatar&output=embed"
+            class="h-[300px] w-full grayscale-[.35] contrast-[1.05]"
+            loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+        </div>
+      </div>
+
+      <!-- right: booking form -->
+      <div class="reveal" style="--d:120ms">
+        <div class="glass-card rounded-3xl p-7 sm:p-9">
+          <h3 class="font-display text-3xl" data-i18n="form.h">Reserve a table</h3>
+          <p class="mt-2 text-sm text-cream/55" data-i18n="form.sub">Send your request straight to our host on WhatsApp — we confirm within a few minutes.</p>
+
+          <form id="bookingForm" class="mt-8 space-y-5">
+            <div>
+              <label for="f-name" class="block text-xs uppercase tracking-[.16em] text-cream/45" data-i18n="form.name">Full name</label>
+              <input id="f-name" required class="mt-2 w-full rounded-xl border border-cream/12 bg-ink/50 px-4 py-3.5 text-cream placeholder:text-cream/25 focus:border-amber focus:outline-none transition" placeholder="Ahmed Al-Sulaiti" />
+            </div>
+            <div class="grid gap-5 sm:grid-cols-2">
+              <div>
+                <label for="f-phone" class="block text-xs uppercase tracking-[.16em] text-cream/45" data-i18n="form.phone">Phone</label>
+                <input id="f-phone" required dir="ltr" class="mt-2 w-full rounded-xl border border-cream/12 bg-ink/50 px-4 py-3.5 text-cream placeholder:text-cream/25 focus:border-amber focus:outline-none transition" placeholder="+974 …" />
+              </div>
+              <div>
+                <label for="f-guests" class="block text-xs uppercase tracking-[.16em] text-cream/45" data-i18n="form.guests">Guests</label>
+                <select id="f-guests" class="mt-2 w-full rounded-xl border border-cream/12 bg-ink/50 px-4 py-3.5 text-cream focus:border-amber focus:outline-none transition">
+                  <option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>8</option><option>10+</option>
+                </select>
+              </div>
+            </div>
+            <div class="grid gap-5 sm:grid-cols-2">
+              <div>
+                <label for="f-date" class="block text-xs uppercase tracking-[.16em] text-cream/45" data-i18n="form.date">Date</label>
+                <input id="f-date" type="date" class="mt-2 w-full rounded-xl border border-cream/12 bg-ink/50 px-4 py-3.5 text-cream focus:border-amber focus:outline-none transition" />
+              </div>
+              <div>
+                <label for="f-time" class="block text-xs uppercase tracking-[.16em] text-cream/45" data-i18n="form.time">Time</label>
+                <input id="f-time" type="time" class="mt-2 w-full rounded-xl border border-cream/12 bg-ink/50 px-4 py-3.5 text-cream focus:border-amber focus:outline-none transition" />
+              </div>
+            </div>
+            <div>
+              <label for="f-note" class="block text-xs uppercase tracking-[.16em] text-cream/45" data-i18n="form.note">Anything we should know?</label>
+              <textarea id="f-note" rows="3" class="mt-2 w-full resize-none rounded-xl border border-cream/12 bg-ink/50 px-4 py-3.5 text-cream placeholder:text-cream/25 focus:border-amber focus:outline-none transition" placeholder="Birthday, high chair, allergy…"></textarea>
+            </div>
+
+            <button type="submit" class="btn-amber w-full rounded-full py-4 text-sm font-bold tracking-wide transition-all duration-300" data-i18n="form.send">Send Reservation</button>
+            <p id="formMsg" class="hidden text-center text-sm text-amber"></p>
+          </form>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════ FOOTER ════════════════ -->
+<footer class="border-t border-cream/[.08] py-12">
+  <div class="mx-auto flex max-w-shell flex-col items-center gap-6 px-5 text-center sm:flex-row sm:justify-between sm:text-left">
+    <div class="flex items-center gap-3">
+      <img src="img/logo.png" alt="" class="h-9 w-auto" />
+      <div>
+        <p class="font-display text-xl tracking-[.16em]">FORNO</p>
+        <p class="text-xs text-cream/40" data-i18n="foot.tag">Authentic Italian · Al Rayyan, Qatar</p>
+      </div>
+    </div>
+    <p class="text-xs text-cream/35">© <span id="yr"></span> Forno Restaurant. <span data-i18n="foot.rights">All rights reserved.</span></p>
+  </div>
+</footer>
+
+<!-- ════════════════ BOOKING MODAL ════════════════ -->
+<div id="modal" class="fixed inset-0 z-[60] hidden items-center justify-center bg-ink/85 p-5 backdrop-blur-md">
+  <div class="glass-card w-full max-w-md rounded-3xl p-8 text-center">
+    <p class="eyebrow" data-i18n="modal.eyebrow">Reservations</p>
+    <h3 class="mt-4 font-display text-3xl" data-i18n="modal.h">How would you like to book?</h3>
+    <p class="mt-3 text-sm text-cream/55" data-i18n="modal.sub">Our host answers on WhatsApp and by phone, every day from 1 PM.</p>
+    <div class="mt-8 space-y-3">
+      <a href="https://wa.me/message/EKRHCWZ6IICUP1" target="_blank" rel="noopener" class="btn-amber flex w-full items-center justify-center gap-2 rounded-full py-4 text-sm font-bold transition-all duration-300" data-i18n="modal.wa">Book on WhatsApp</a>
+      <a href="tel:+97440020250" class="btn-ghost flex w-full items-center justify-center rounded-full py-4 text-sm font-semibold transition-all duration-300" data-i18n="modal.call">Call 4002 0250</a>
+      <button id="toForm" class="w-full py-2 text-sm text-cream/50 underline underline-offset-4 hover:text-amber transition" data-i18n="modal.form">Or fill in the reservation form</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ─────────────────────────── DATA ─────────────────────────── */
+const IMG = 'https://forno-qa.site/imgPro/';
+
+const CATS = [
+  { id:'soups',     en:'Soups',       ar:'الشوربات' },
+  { id:'pasta',     en:'Pasta',       ar:'الباستا' },
+  { id:'appetizer', en:'Appetizer',   ar:'المقبلات' },
+  { id:'salads',    en:'Salads',      ar:'السلطات' },
+  { id:'main',      en:'Main Course', ar:'الأطباق الرئيسية' },
+  { id:'pizza',     en:'Pizza',       ar:'البيتزا' },
+  { id:'risotto',   en:'Risotto',     ar:'الريزوتو' },
+  { id:'sandwich',  en:'Sandwich',    ar:'السندويتش' },
+  { id:'burger',    en:'Burger',      ar:'البرجر' },
+  { id:'side',      en:'Side Dish',   ar:'الأطباق الجانبية' },
+  { id:'juice',     en:'Fresh Juice', ar:'العصائر الطازجة' },
+  { id:'mojito',    en:'Mojito',      ar:'الموهيتو' },
+  { id:'shake',     en:'Milk Shake',  ar:'الميلك شيك' },
+  { id:'soft',      en:'Soft Drink',  ar:'المشروبات الغازية' },
+  { id:'dessert',   en:'Dessert',     ar:'الحلويات' },
+];
+
+/* Every item, price and image below mirrors forno-qa.site/menu exactly. */
+const DISHES = [
+  // ── Soups
+  { c:'soups', n:'Cream Chicken Soup', d:'Chicken, corn, cream served with crispy garlic bread.', p:30, i:'1747249847.jpg' },
+
+  // ── Pasta
+  { c:'pasta', n:'Roll Pasta mix sauce', d:'Chicken pieces, fusilli pasta, mixed vegetable, cooking cream, tomato sauce and parmesan cheese', p:39, i:'1747243779.jpg' },
+  { c:'pasta', n:'Bandolini Pasta', d:'Penne pasta, noodles, chicken pieces, chopped onion, minced garlic. Topped with cream cheese and chopped parsley', p:38, i:'1747244458.jpg' },
+  { c:'pasta', n:'Penne Alfredo Mix Sauce', d:'Chicken pieces, cooking cream, Italian red tomato sauce, parmesan cheese and herbs.', p:38, i:'1747246784.jpg' },
+  { c:'pasta', n:'Polo Forno', d:'Penne pasta, basil pesto sauce, cooking cream, chicken and mozzarella cheese', p:53, i:'1747246876.jpg' },
+  { c:'pasta', n:'Lava Cheese Pasta', d:'Creamy fusilli pasta with melted cheese, Forno’s special pink sauce, and marinated chicken — rich, flavorful, and irresistibly satisfying.', p:37, i:'1776805537.jpg' },
+  { c:'pasta', n:'Chicken Lasagna', d:'Traditional Italian lasagna with chicken bolognaise, béchamel sauce and mozzarella cheese.', p:46, i:'1747243868.jpg' },
+  { c:'pasta', n:'Spaghetti Bolognese Pasta', d:'Choice of your spaghetti beef or chicken or plain spaghetti pasta', p:39, i:'1747243945.jpg' },
+  { c:'pasta', n:'Penne Alfredo White Sauce', d:'Penne pasta, chicken, parmesan cheese, white sauce, chopped parsley', p:40, i:'1747244244.jpg' },
+  { c:'pasta', n:'Carbonara', d:'Fettuccine pasta, smoked beef, cooking cream and parmesan cheese.', p:40, i:'1747244575.jpg' },
+  { c:'pasta', n:'Fettuccine Pesto', d:'Homemade basil pesto, mixed veggies, cooking cream and parmesan cheese.', p:40, i:'1747246049.jpg' },
+  { c:'pasta', n:'Mushroom Pasta', d:'Penne pasta, cooking cream, mushroom and parmesan cheese.', p:40, i:'1747246201.jpg' },
+  { c:'pasta', n:'Beef Lasagna', d:'Traditional Italian lasagna with beef bolognaise, béchamel sauce and cheeses', p:54, i:'1747246625.jpg' },
+  { c:'pasta', n:'Fettuccine Alfredo', d:'Fettuccine pasta, chicken, parmesan cheese, white sauce', p:40, i:'1747246727.jpg' },
+  { c:'pasta', n:'Penne Arabiata', d:'Spicy tomato sauce, fresh cherry tomatoes, fresh basil leaves, parmesan cheese', p:35, i:'1747246971.jpg' },
+
+  // ── Appetizer
+  { c:'appetizer', n:'Risotto Cheese Balls', d:'4 pieces crispy fried risotto balls stuffed with mozzarella cheese served with spicy marinara sauce.', p:25, i:'1747248532.jpg' },
+  { c:'appetizer', n:'Grilled Shrimp', d:'6 pieces shrimp marinated with spicy sauce served with chili spicy sauce.', p:30, i:'1747248610.jpg' },
+  { c:'appetizer', n:'Dynamite Shrimp', d:'6 pieces marinated with dynamite sauce', p:35, i:'1770839726.jpg' },
+  { c:'appetizer', n:'Dynamite Chicken', d:'Fried chicken cubes mixed with special Dynamite sauce', p:31, i:'1783954708.jpg' },
+  { c:'appetizer', n:'Fried Shrimp', d:'6 pcs fried shrimp served with marinara spicy sauce', p:30, i:'1747248926.jpg' },
+  { c:'appetizer', n:'Strips Chicken', d:'4 pcs fried chicken served with Forno sauce.', p:25, i:'1747248975.jpg' },
+  { c:'appetizer', n:'Mozzarella Stick', d:'5 pieces of mozzarella stick served with Forno sauce', p:28, i:'1747249092.jpg' },
+
+  // ── Salads
+  { c:'salads', n:'Rocca Salad', d:'Rocca, mushrooms, cherry tomatoes, parmesan cheese and balsamic glaze', p:30, i:'1747249987.jpg' },
+  { c:'salads', n:'Caesar Salad', d:'Your choice of plain or chicken caesar salad, iceberg lettuce, parmesan cheese, croutons, cherry tomatoes served with homemade caesar sauce.', p:30, i:'1747250051.jpg' },
+
+  // ── Main Course
+  { c:'main', n:'Grilled Chicken With Mushroom Sauce', d:'Chicken breast and mushroom sauce served with grilled veg or French fries', p:60, i:'1747250200.jpg' },
+
+  // ── Pizza
+  { c:'pizza', n:'Ranch Chicken Pizza', d:'Chicken, ranch sauce, mozzarella cheese, and mix capsicum.', p:41, i:'1770839789.jpg' },
+  { c:'pizza', n:'Chicken Pizza', d:'Fresh chicken marinated, Italian mix herbs sauce, mozzarella cheese, Italian dry herbs and Forno sauce', p:40, i:'1770839817.jpg' },
+  { c:'pizza', n:'Dynamite Pizza', d:'Beef bolognaise, mozzarella cheese, Italian red tomato sauce. Served with dynamite sauce', p:49, i:'1770839841.jpg' },
+  { c:'pizza', n:'Pepperoni Pizza', d:'Pizza with Italian mix herbs sauce, mozzarella cheese, pepperoni, Italian fresh herbs and Forno sauce.', p:40, i:'1770839862.jpg' },
+  { c:'pizza', n:'Margherita Pizza', d:'Mozzarella cheese, Italian fresh herbs, Italian mix herbs sauce and Forno sauce.', p:35, i:'1770839905.jpg' },
+  { c:'pizza', n:'Diavola Pizza', d:'Pepperoni, chicken, black olives, mixed colored capsicum, sliced onions, Italian fresh herbs, mozzarella cheese and Forno sauce.', p:40, i:'1776805360.jpg' },
+  { c:'pizza', n:'Four Cheese Pizza', d:'Mozzarella cheese, cheddar cheese, kashkaval cheese, parmesan cheese and Forno sauce.', p:40, i:'1770839884.jpg' },
+  { c:'pizza', n:'Vegetables Pizza', d:'Eggplant, sliced zucchini, sliced onions, sliced tomatoes, black olives, mushroom, mixed capsicum, mozzarella cheese, Italian herbs, Italian mix herb sauce and Forno sauce.', p:37, i:'1747332580.jpg' },
+
+  // ── Risotto
+  { c:'risotto', n:'Risotto Seafood', d:'Italian risotto, mixed seafood, mixed sauce and parmesan cheese.', p:50, i:'1747247123.jpg' },
+  { c:'risotto', n:'Risotto Porcini', d:'Italian risotto, porcini, mushrooms, cooking cream, cherry tomatoes and parmesan cheese.', p:40, i:'1747247184.jpg' },
+  { c:'risotto', n:'Risotto Chicken', d:'Italian risotto, parmesan cheese, mushroom, chicken.', p:45, i:'1747247236.jpg' },
+
+  // ── Sandwich
+  { c:'sandwich', n:'Melted Cheese Sandwich', d:'Fresh mushroom, chicken, cooking cream with edamame cheese and Forno sauce.', p:25, i:'1747247398.jpg' },
+
+  // ── Burger
+  { c:'burger', n:'Forno Burger', d:'Fresh beef patty, lettuce, mushroom, mixed capsicum, mushroom cooking cream, cheddar cheese and pickles.', p:35, i:'1747247492.jpg' },
+  { c:'burger', n:'Chicken Crunchy Burger', d:'Crispy fried chicken, sliced tomato, cucumber, pickle, cheddar cheese.', p:30, i:'1747247626.jpg' },
+  { c:'burger', n:'Roma Burger', d:'Fresh chicken patty, smoked turkey slices, lettuce, tomato, pickles, BBQ sauce and chef sauce.', p:30, i:'1747247556.jpg' },
+  { c:'burger', n:'Spicy Chicken Burger', d:'Chicken spicy patty, mushroom, lettuce, cheddar cheese, tomato, pickle.', p:30, i:'1747247699.jpg' },
+
+  // ── Side dish
+  { c:'side', n:'Garlic Bread', d:'4 slice bread, mozzarella cheese, garlic butter', p:20, i:'1747247789.jpg' },
+  { c:'side', n:'Dynamite Fries', d:'Minced beef, cheese, French fries, special sauce', p:30, i:'1776805174.jpg' },
+  { c:'side', n:'French Fries', d:'French fries served with ketchup.', p:12, i:'1776805274.jpg' },
+  { c:'side', n:'Cheese Fries', d:'French fries and cheddar cheese.', p:17, i:'1776805131.jpg' },
+  { c:'side', n:'Wedges Potato', d:'Wedges potatoes served with ketchup sauce', p:18, i:'1776805327.jpg' },
+
+  // ── Fresh juice
+  { c:'juice', n:'Lemon Mint Juice', d:'Made with a blend of fresh lemons, mint, and a touch of sweetness, it’s a perfect thirst quencher and great to enjoy anytime of the day.', p:18, i:'1747255286.jpg' },
+  { c:'juice', n:'Orange Juice', d:'Made with freshly squeezed oranges, it’s a great source of Vitamin C.', p:18, i:'1747255523.jpg' },
+  { c:'juice', n:'Pineapple Juice', d:'Sweet, tropical drink made by blending the flesh of a pineapple. A rich source of vitamin C with enzymes that aid digestion.', p:17, i:'1747255239.jpg' },
+  { c:'juice', n:'Strawberry Juice', d:'Refreshing and delicious, rich in natural vitamins and minerals. Healthy alternative to sugary drinks.', p:15, i:'1747255342.jpg' },
+  { c:'juice', n:'Mango Juice', d:'Made from the freshest, ripest mangos, carefully selected for the perfect balance of sweetness and tanginess.', p:15, i:'1747255383.jpg' },
+
+  // ── Mojito
+  { c:'mojito', n:'Strawberry Mojito', d:'Made with fresh strawberries, mint leaves, lime juice and a splash of soda. A perfect balance of sweet and tangy.', p:17, i:'1747255588.jpg' },
+  { c:'mojito', n:'Lemon Mint Mojito', d:'Lemon, mint syrup mixed with seven up and blue lagoon', p:17, i:'1747255651.jpg' },
+  { c:'mojito', n:'Passion Mojito', d:'Fresh passion fruit, passion fruit syrup mixed with 7UP.', p:20, i:'1747255706.jpg' },
+  { c:'mojito', n:'Forno Mojito', d:'Our special fresh dragon fruit sauce mixed with 7UP.', p:24, i:'1747255754.jpg' },
+
+  // ── Milk shake
+  { c:'shake', n:'Strawberry Milkshake', d:'Whipping cream, strawberry, ice cubes mixed with strawberry puree', p:20, i:'1747308374.jpg' },
+
+  // ── Soft Drink
+  { c:'soft', n:'Kinza Cola', d:'A crisp and revitalizing cola that quenches your thirst with its invigorating taste.', p:5, i:'1747256304.jpg' },
+  { c:'soft', n:'Coca Cola', d:'A crisp and revitalizing classic that quenches your thirst with its invigorating taste.', p:6, i:'1747256571.jpg' },
+  { c:'soft', n:'Cola Light', d:'A crisp, revitalizing light cola that quenches your thirst with its invigorating taste.', p:6, i:'1747256611.jpg' },
+  { c:'soft', n:'Pepsi', d:'A refreshing Pepsi that quenches your thirst with its rejuvenating essence.', p:6, i:'1747256658.jpg' },
+  { c:'soft', n:'Diet Pepsi', d:'A refreshing diet Pepsi that quenches your thirst with its invigorating taste.', p:6, i:'1747256715.jpg' },
+  { c:'soft', n:'Dew', d:'A crisp and revitalizing citrus soda that quenches your thirst.', p:6, i:'1747256751.jpg' },
+  { c:'soft', n:'Kinza Diet', d:'A crisp and revitalizing diet cola that quenches your thirst.', p:5, i:'1747309781.jpg' },
+  { c:'soft', n:'Small Water', d:'Stay hydrated and refreshed with our water.', p:3, i:'1747256870.jpg' },
+
+  // ── Dessert
+  { c:'dessert', n:'Tiramisu Cake', d:'A coffee-flavored Italian dessert. Ladyfingers soaked in coffee, layered with whipped eggs, sugar, mascarpone cheese and cocoa.', p:28, i:'1770839757.jpg' },
+  { c:'dessert', n:'Lotus Cake', d:'Lotus Biscoff, whipping cream mixed with cheese.', p:19, i:'1770840353.jpg' },
+  { c:'dessert', n:'Cheesecake', d:'Your choice of blueberry or strawberry cheesecake', p:19, i:'1770839929.jpg' },
+];
+
+const REVIEWS = [
+  { q:'The best Italian food I have had in Doha. The pasta is clearly made in-house and the portions are generous. We now come every week.', a:'Nasser A.', m:'Google Review' },
+  { q:'We ordered the catering for a family gathering of forty people. Everything arrived hot, on time, and the team set up beautifully.', a:'Fatima H.', m:'Instagram' },
+  { q:'Open until 4 AM and the quality never drops. The Forno Burger and dynamite fries at 2 AM are unbeatable.', a:'Omar K.', m:'Google Review' },
+];
+
+const AR = {
+  'nav.home':'الرئيسية','nav.story':'قصتنا','nav.menu':'المنيو','nav.why':'لماذا فورنو','nav.contact':'زورونا',
+  'cta.book':'احجز طاولة','cta.menu':'تصفح المنيو',
+  'hero.eyebrow':'الريان · قطر · منذ ٢٠١٥',
+  'hero.l1':'عشر سنوات من النار،','hero.l2':'والطحين والصبر.',
+  'hero.sub':'باستا مصنوعة يدويًا، بيتزا على الحطب، وريزوتو يُطهى على مهل — مطبخ إيطالي أصيل في قلب الوجبة. مفتوح يوميًا حتى الرابعة فجرًا.',
+  'story.eyebrow':'قصتنا','story.h1':'فرن واحد،','story.h2':'وفكرة عنيدة.',
+  'story.p1':'بدأت فورنو بفرن حطب واحد ورفض تام لاختصار الطريق. عجينة ترتاح ليلة كاملة، وصلصات تُطهى لساعات، ولا يخرج طبق من المطبخ قبل أن يكون تمامًا كما يجب.',
+  'story.p2':'بعد عشر سنوات لم تتغير الوصفات، تغيّر فقط عدد الجالسين حول الطاولة. ما زلنا نشكّل كل باستا يدويًا، ونخبز كل بيتزا على الحجر، ونبقى مفتوحين بعد أن تهدأ المدينة.',
+  'stat.years':'سنوات','stat.guests':'ضيف سعيد','stat.cats':'أصناف','stat.dishes':'طبق',
+  'menu.eyebrow':'المنيو','menu.h1':'خمسة عشر صنفًا.','menu.h2':'ومعيار واحد.',
+  'menu.sub':'الأسعار بالريال القطري. اضغط على أي طبق لإرساله عبر واتساب.','menu.full':'شاهد المنيو كاملًا',
+  'why.eyebrow':'لماذا فورنو','why.h':'ما يمكنك الاعتماد عليه في كل زيارة.',
+  'why.1t':'مخبوز على الحجر','why.1d':'كل بيتزا توضع مباشرة على أرضية الفرن — قشرة مقرمشة وقلب ذائب، في تسعين ثانية.',
+  'why.2t':'يُحضَّر في نفس اليوم','why.2d':'العجينة والصلصات والمرق تُحضَّر طازجة كل صباح. لا شيء يُخزَّن ولا شيء مجمّد.',
+  'why.3t':'مطبخ ترونه بأعينكم','why.3d':'مطبخ مفتوح ومحطات مصنفة بالألوان وفحوصات نظافة يومية — المعيار نفسه سواء كنتم تنظرون أم لا.',
+  'why.4t':'مساحة للطاولة الكبيرة','why.4d':'إضاءة دافئة وجلسات عائلية وخدمة تموين خارجي — من عشاء هادئ إلى مئتي ضيف.',
+  'rev.eyebrow':'آراء ضيوفنا',
+  'ct.eyebrow':'زورونا','ct.h1':'شارع خدمة الوجبة،','ct.h2':'الريان.',
+  'ct.addr':'العنوان','ct.phone':'الهاتف','ct.hours':'مواعيد العمل','ct.hoursv':'طوال أيام الأسبوع · ١ ظهرًا — ٤ فجرًا','ct.dir':'الاتجاهات',
+  'form.h':'احجز طاولتك','form.sub':'أرسل طلبك مباشرة إلى مضيفنا عبر واتساب — نؤكد الحجز خلال دقائق.',
+  'form.name':'الاسم الكامل','form.phone':'رقم الهاتف','form.guests':'عدد الضيوف','form.date':'التاريخ','form.time':'الوقت',
+  'form.note':'هل من ملاحظات؟','form.send':'إرسال الحجز',
+  'modal.eyebrow':'الحجوزات','modal.h':'كيف تفضل الحجز؟','modal.sub':'مضيفنا متاح على واتساب وعلى الهاتف يوميًا من الواحدة ظهرًا.',
+  'modal.wa':'احجز عبر واتساب','modal.call':'اتصل ٠٢٥٠ ٤٠٠٢','modal.form':'أو املأ نموذج الحجز',
+  'foot.tag':'مطبخ إيطالي أصيل · الريان، قطر','foot.rights':'جميع الحقوق محفوظة.',
+};
+
+/* ─────────────────────────── MENU ─────────────────────────── */
+const WA = 'https://wa.me/97430585876?text=';
+let lang = 'en', activeCat = 'pasta';
+
+const tabsEl = document.getElementById('tabs');
+const gridEl = document.getElementById('dishes');
+
+function renderTabs(){
+  tabsEl.innerHTML = CATS.map(c => `
+    <button data-cat="${c.id}"
+      class="tab shrink-0 rounded-full border border-cream/15 px-5 py-2.5 text-sm font-semibold tracking-wide text-cream/65 transition-all duration-300 hover:border-amber/60 hover:text-amber ${c.id===activeCat?'tab-active':''}">
+      ${lang==='ar'?c.ar:c.en}
+    </button>`).join('');
+  tabsEl.querySelectorAll('.tab').forEach(b =>
+    b.addEventListener('click', () => { activeCat = b.dataset.cat; renderTabs(); renderDishes(); }));
+}
+
+function renderDishes(){
+  const items = DISHES.filter(d => d.c === activeCat);
+  gridEl.style.opacity = 0;
+  setTimeout(() => {
+    gridEl.innerHTML = items.map((d, k) => `
+      <a href="${WA + encodeURIComponent('Hello Forno — I would like to order: ' + d.n + ' (' + d.p + ' QAR)')}"
+         target="_blank" rel="noopener"
+         class="dish glass-card group block overflow-hidden rounded-3xl transition-all duration-500 hover:border-amber/40 hover:-translate-y-1.5"
+         style="animation: lift .6s cubic-bezier(.16,1,.3,1) forwards; animation-delay:${k*55}ms; opacity:0">
+        <div class="arch overflow-hidden">
+          <img src="${IMG + d.i}" alt="${d.n}" loading="lazy" class="dish-img h-52 w-full object-cover" />
+        </div>
+        <div class="p-6">
+          <div class="flex items-start justify-between gap-4">
+            <h3 class="font-display text-2xl leading-tight">${d.n}</h3>
+            <span class="shrink-0 rounded-full bg-amber/12 px-3 py-1 text-sm font-bold text-amber" dir="ltr">${d.p} <span class="text-[.7rem] font-medium">QAR</span></span>
+          </div>
+          <p class="mt-3 text-sm leading-relaxed text-cream/55">${d.d}</p>
+          <span class="mt-5 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[.16em] text-cream/35 transition group-hover:text-amber">
+            ${lang==='ar'?'اطلب عبر واتساب':'Order on WhatsApp'}
+            <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12l-7.5 7.5M21 12H3"/></svg>
+          </span>
+        </div>
+      </a>`).join('');
+    gridEl.style.opacity = 1;
+  }, 160);
+}
+gridEl.style.transition = 'opacity .25s ease';
+renderTabs(); renderDishes();
+
+/* ─────────────────────────── REVIEWS ─────────────────────────── */
+const revEl = document.getElementById('reviews'), dotsEl = document.getElementById('dots');
+let ri = 0, timer;
+
+function paintReview(){
+  const r = REVIEWS[ri];
+  revEl.innerHTML = `
+    <blockquote style="animation: lift .7s cubic-bezier(.16,1,.3,1) forwards; opacity:0">
+      <p class="font-display text-[clamp(1.35rem,3vw,2.1rem)] italic leading-snug text-cream/90">“${r.q}”</p>
+      <footer class="mt-7 text-sm text-cream/45">
+        <span class="font-semibold text-amber">${r.a}</span> · ${r.m}
+      </footer>
+    </blockquote>`;
+  dotsEl.innerHTML = REVIEWS.map((_, k) =>
+    `<button data-i="${k}" aria-label="Review ${k+1}" class="h-1.5 rounded-full transition-all duration-500 ${k===ri?'w-8 bg-amber':'w-1.5 bg-cream/25 hover:bg-cream/50'}"></button>`).join('');
+  dotsEl.querySelectorAll('button').forEach(b =>
+    b.addEventListener('click', () => { ri = +b.dataset.i; paintReview(); restart(); }));
+}
+function restart(){ clearInterval(timer); timer = setInterval(() => { ri = (ri+1) % REVIEWS.length; paintReview(); }, 6500); }
+paintReview(); restart();
+revEl.addEventListener('mouseenter', () => clearInterval(timer));
+revEl.addEventListener('mouseleave', restart);
+
+/* ─────────────────────────── NAV / DRAWER / MODAL ─────────────────────────── */
+const nav = document.getElementById('nav');
+addEventListener('scroll', () => nav.classList.toggle('shadow-[0_18px_50px_-24px_rgba(0,0,0,.9)]', scrollY > 24));
+
+const drawer = document.getElementById('drawer');
+document.getElementById('burger').addEventListener('click', () => drawer.classList.toggle('hidden'));
+drawer.querySelectorAll('a').forEach(a => a.addEventListener('click', () => drawer.classList.add('hidden')));
+
+const modal = document.getElementById('modal');
+const openModal = () => { modal.classList.replace('hidden','flex'); document.body.style.overflow='hidden'; };
+const closeModal = () => { modal.classList.replace('flex','hidden'); document.body.style.overflow=''; };
+document.querySelectorAll('[data-book]').forEach(b => b.addEventListener('click', () => { drawer.classList.add('hidden'); openModal(); }));
+modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
+addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+document.getElementById('toForm').addEventListener('click', () => {
+  closeModal();
+  document.getElementById('contact').scrollIntoView({ behavior:'smooth' });
+  setTimeout(() => document.getElementById('f-name').focus(), 700);
+});
+
+/* ─────────────────────────── FORM → WHATSAPP ─────────────────────────── */
+document.getElementById('bookingForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const g = id => document.getElementById(id).value.trim();
+  const msg =
+`New reservation request — Forno
+Name: ${g('f-name')}
+Phone: ${g('f-phone')}
+Guests: ${g('f-guests')}
+Date: ${g('f-date') || '—'}
+Time: ${g('f-time') || '—'}
+Notes: ${g('f-note') || '—'}`;
+  window.open(WA + encodeURIComponent(msg), '_blank');
+  const m = document.getElementById('formMsg');
+  m.textContent = lang === 'ar' ? 'تم فتح واتساب — أرسل الرسالة لتأكيد الحجز.' : 'WhatsApp is open — send the message to confirm.';
+  m.classList.remove('hidden');
+});
+
+/* ─────────────────────────── SCROLL REVEAL + COUNTERS ─────────────────────────── */
+const io = new IntersectionObserver(entries => {
+  entries.forEach(en => { if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); } });
+}, { threshold: .15 });
+document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+
+const counters = new IntersectionObserver(entries => {
+  entries.forEach(en => {
+    if (!en.isIntersecting) return;
+    const el = en.target, end = +el.dataset.count, sfx = el.dataset.suffix || '';
+    let t0 = null;
+    const step = ts => {
+      if (!t0) t0 = ts;
+      const p = Math.min((ts - t0) / 1400, 1);
+      el.textContent = Math.floor(end * (1 - Math.pow(1 - p, 3))) + (p === 1 ? sfx : '');
+      if (p < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+    counters.unobserve(el);
+  });
+}, { threshold: .6 });
+document.querySelectorAll('[data-count]').forEach(el => counters.observe(el));
+
+/* ─────────────────────────── LANGUAGE TOGGLE ─────────────────────────── */
+const EN = {};
+document.querySelectorAll('[data-i18n]').forEach(el => EN[el.dataset.i18n] = el.innerHTML);
+
+document.getElementById('langBtn').addEventListener('click', e => {
+  lang = lang === 'en' ? 'ar' : 'en';
+  const dict = lang === 'ar' ? AR : EN;
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const v = dict[el.dataset.i18n]; if (v) el.innerHTML = v;
+  });
+  document.documentElement.lang = lang;
+  document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+  e.target.textContent = lang === 'ar' ? 'EN' : 'AR';
+  renderTabs(); renderDishes();
+});
+
+document.getElementById('yr').textContent = new Date().getFullYear();
+</script>
+</body>
+</html>

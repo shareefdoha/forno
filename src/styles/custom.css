@@ -1,0 +1,89 @@
+/* ═══════════════════════════════════════════════════════════════════
+   YOUR ORIGINAL CSS — copied verbatim from the <style> block that was
+   inside forno-redesign.html. Nothing here has been renamed or altered.
+
+   This file is imported AFTER Tailwind in src/main.jsx, which reproduces
+   the exact cascade order the CDN build had.
+
+   👉 If you have any additional custom stylesheet, paste it at the very
+      bottom of this file (see the marked section at the end).
+   ═══════════════════════════════════════════════════════════════════ */
+
+:root { --nav-h: 76px; }
+html { -webkit-text-size-adjust: 100%; }
+body { background: #0B0B0C; }
+
+/* ── Signature: the oven arch. Forno means oven; every image sits in one. ── */
+.arch      { border-radius: 46% 46% 10px 10px / 20% 20% 2% 2%; }
+.arch-wide { border-radius: 50% 50% 16px 16px / 16% 16% 2% 2%; }
+.arch-tall { border-radius: 50% 50% 12px 12px / 28% 28% 2% 2%; }
+
+/* Ember glow behind the hero — the heat coming off the oven mouth */
+.ember {
+  background: radial-gradient(58% 46% at 50% 104%, rgba(255,193,7,.30), rgba(224,138,0,.12) 42%, transparent 72%);
+  animation: flicker 6s ease-in-out infinite;
+}
+@keyframes flicker { 0%,100% { opacity:.8 } 40% { opacity:1 } 70% { opacity:.88 } }
+
+.glass {
+  background: rgba(11,11,12,.62);
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  border-bottom: 1px solid rgba(243,237,226,.08);
+}
+.glass-card {
+  background: linear-gradient(160deg, rgba(243,237,226,.055), rgba(243,237,226,.015));
+  border: 1px solid rgba(243,237,226,.09);
+  backdrop-filter: blur(10px);
+}
+
+.rule { height:1px; background: linear-gradient(90deg, transparent, rgba(255,193,7,.45), transparent); }
+
+.eyebrow {
+  font-size: .72rem; letter-spacing: .34em; text-transform: uppercase;
+  font-weight: 600; color: #FFC107;
+}
+.h-15{height: 4rem;}
+
+.btn-amber {
+  background: linear-gradient(135deg, #FFC107, #E08A00);
+  color: #0B0B0C; box-shadow: 0 10px 34px -12px rgba(255,193,7,.75);
+}
+.btn-amber:hover { box-shadow: 0 16px 44px -12px rgba(255,193,7,.95); transform: translateY(-2px); }
+.btn-ghost { border:1px solid rgba(243,237,226,.28); color:#F3EDE2 }
+.btn-ghost:hover { border-color:#FFC107; color:#FFC107; transform: translateY(-2px) }
+
+/* Scroll reveal */
+.reveal { opacity:0; transform: translateY(26px); }
+.reveal.in {
+  opacity:1; transform:none;
+  transition: opacity .85s cubic-bezier(.16,1,.3,1), transform .85s cubic-bezier(.16,1,.3,1);
+  transition-delay: var(--d, 0ms);
+}
+
+/* Hero load sequence */
+.lift { opacity:0; transform: translateY(28px); animation: lift .95s cubic-bezier(.16,1,.3,1) forwards; animation-delay: var(--d,0ms) }
+@keyframes lift { to { opacity:1; transform:none } }
+
+.dish:hover .dish-img { transform: scale(1.07) }
+.dish-img { transition: transform .7s cubic-bezier(.16,1,.3,1) }
+
+.tab-active { color:#0B0B0C; background: linear-gradient(135deg,#FFC107,#E08A00); border-color: transparent }
+
+.noscroll::-webkit-scrollbar { display:none }
+.noscroll { scrollbar-width:none }
+
+:focus-visible { outline: 2px solid #FFC107; outline-offset: 3px; border-radius: 4px }
+
+[dir="rtl"] body, [dir="rtl"] .font-display { font-family: "IBM Plex Sans Arabic", sans-serif }
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important }
+  .reveal { opacity:1; transform:none }
+  .lift  { opacity:1; transform:none }
+  #dishes > a, #reviews blockquote { opacity:1 !important }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   ▼▼▼ PASTE ANY ADDITIONAL CUSTOM CSS BELOW THIS LINE ▼▼▼
+   ═══════════════════════════════════════════════════════════════════ */
