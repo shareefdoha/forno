@@ -1,68 +1,49 @@
 import { createContext, useContext, useEffect, useState, useMemo, useCallback } from 'react';
-import { supabase, isDemoBackend, SETUP_MESSAGE } from '../lib/supabase';
-import * as local from '../lib/localBackend';
+import { api, getToken, setToken } from '../lib/apiClient';
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const [session, setSession] = useState(null);
+  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // A token in localStorage only proves we had a session; the server decides
+  // whether it is still valid.
   useEffect(() => {
     let active = true;
 
-    // Dev with no .env — restore the demo session from localStorage.
-    if (isDemoBackend) {
-      setSession(local.getSession());
+    if (!getToken()) {
       setLoading(false);
       return;
     }
 
-    // No .env yet — stay signed out instead of crashing the whole app.
-    if (!supabase) {
-      setLoading(false);
-      return;
-    }
+    api('/auth/me', { auth: true })
+      .then((res) => { if (active) setUser(res?.user ?? null); })
+      .catch(() => { if (active) setUser(null); })
+      .finally(() => { if (active) setLoading(false); });
 
-    supabase.auth.getSession().then(({ data }) => {
-      if (!active) return;
-      setSession(data.session ?? null);
-      setLoading(false);
-    });
-
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, s) => {
-      setSession(s);
-      setLoading(false);
-    });
-
-    return () => {
-      active = false;
-      sub.subscription.unsubscribe();
-    };
+    return () => { active = false; };
   }, []);
 
   const signIn = useCallback(async (email, password) => {
-    if (isDemoBackend) {
-      setSession(local.signIn(email, password));
-      return;
-    }
-    if (!supabase) throw new Error(SETUP_MESSAGE);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) throw error;
+    const res = await api('/auth/login', { method: 'POST', body: { email, password } });
+    setToken(res.token);
+    setUser(res.user);
   }, []);
 
   const signOut = useCallback(async () => {
-    if (isDemoBackend) {
-      local.signOut();
-      setSession(null);
-      return;
+    try {
+      await api('/auth/logout', { method: 'POST', auth: true });
+    } catch {
+      /* already expired server-side — clearing locally is enough */
     }
-    if (supabase) await supabase.auth.signOut();
+    setToken(null);
+    setUser(null);
   }, []);
 
   const value = useMemo(
-    () => ({ session, user: session?.user ?? null, loading, signIn, signOut }),
-    [session, loading, signIn, signOut],
+    () => ({ user, session: user ? { user } : null, loading, signIn, signOut }),
+    [user, loading, signIn, signOut],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -4,9 +4,6 @@ import ItemFormModal from '../../components/admin/ItemFormModal';
 import ConfirmDialog from '../../components/admin/ConfirmDialog';
 import { useCategories, useMenuItems, useToggleEnabled, useDeleteItem } from '../../hooks/useMenu';
 import { formatPrice } from '../../lib/utils';
-import { isDemoBackend } from '../../lib/supabase';
-import { resetAll } from '../../lib/localBackend';
-import { useQueryClient } from '@tanstack/react-query';
 
 export default function Dashboard() {
   // Admin sees inactive categories too, so nothing can go missing from the CMS.
@@ -14,7 +11,6 @@ export default function Dashboard() {
   const items = useMenuItems();
   const toggle = useToggleEnabled();
   const del = useDeleteItem();
-  const qc = useQueryClient();
 
   const [filter, setFilter] = useState('all');
   const [search, setSearch] = useState('');
@@ -58,25 +54,6 @@ export default function Dashboard() {
         <Stat label="Categories" value={(categories.data ?? []).length} />
         <Stat label="Disabled" value={stats.disabled} />
       </div>
-
-      {isDemoBackend && (
-        <div className="mt-6 flex flex-wrap items-center gap-4 rounded-2xl border border-amber/25 bg-amber/[.06] px-5 py-3 text-xs leading-relaxed text-cream/65">
-          <p className="flex-1">
-            <span className="font-semibold text-amber">Demo backend</span> — changes save to this
-            browser only and are lost when you connect Supabase. Photos are downscaled to fit
-            browser storage.
-          </p>
-          <button
-            onClick={() => {
-              resetAll();
-              qc.invalidateQueries();
-            }}
-            className="rounded-full border border-cream/20 px-4 py-2 font-semibold text-cream/70 transition hover:border-amber hover:text-amber"
-          >
-            Reset demo data
-          </button>
-        </div>
-      )}
 
       {actionError && (
         <p className="mt-6 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">

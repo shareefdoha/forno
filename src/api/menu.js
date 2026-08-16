@@ -1,124 +1,67 @@
-import {
-  requireSupabase, isSupabaseConfigured, isDemoBackend, IMAGE_BUCKET,
-} from '../lib/supabase';
-import { DEMO_CATEGORIES, DEMO_ITEMS } from '../lib/demoData';
-import * as local from '../lib/localBackend';
+import { api } from '../lib/apiClient';
 
-/* Three modes, in priority order:
-     1. Supabase configured        → the real database
-     2. Dev, no .env               → local demo backend (editable, browser-only)
-     3. Production build, no .env  → read-only preview data                    */
+/* Every read and write goes to the local API in /server, which stores
+   everything in PostgreSQL (see server/db.js). */
 
 /* ══════════════════════════════ READ ══════════════════════════════ */
 
 export async function fetchCategories({ onlyActive = true } = {}) {
-  if (isDemoBackend) return local.listCategories({ onlyActive });
-  if (!isSupabaseConfigured) {
-    return onlyActive ? DEMO_CATEGORIES.filter((c) => c.is_active) : DEMO_CATEGORIES;
-  }
-
-  let q = requireSupabase()
-    .from('categories')
-    .select('id, slug, name_en, name_ar, sort_order, is_active')
-    .order('sort_order', { ascending: true });
-
-  if (onlyActive) q = q.eq('is_active', true);
-
-  const { data, error } = await q;
-  if (error) throw error;
-  return data ?? [];
+  return api(`/categories?onlyActive=${onlyActive ? 'true' : 'false'}`);
 }
 
 /**
- * The whole menu is ~70 rows, so we fetch it once and filter by category in
- * the browser — exactly how the original static page behaved, minus the
- * network round-trip on every tab click.
+ * The whole menu is ~70 rows, so it is fetched once and filtered by category
+ * in the browser — the same behaviour the original static page had.
  */
 export async function fetchMenuItems({ categoryId = null } = {}) {
-  if (isDemoBackend) return local.listItems({ categoryId });
-  if (!isSupabaseConfigured) {
-    return categoryId ? DEMO_ITEMS.filter((i) => i.category_id === categoryId) : DEMO_ITEMS;
-  }
-
-  let q = requireSupabase()
-    .from('menu_items')
-    .select(
-      'id, category_id, name_en, name_ar, description_en, description_ar, price, image_url, image_path, is_enabled, sort_order',
-    )
-    .order('sort_order', { ascending: true })
-    .order('name_en', { ascending: true });
-
-  if (categoryId) q = q.eq('category_id', categoryId);
-
-  const { data, error } = await q;
-  if (error) throw error;
-  return data ?? [];
+  const rows = await api('/menu-items');
+  return categoryId ? rows.filter((i) => i.category_id === categoryId) : rows;
 }
 
 /* ══════════════════════════ IMAGE STORAGE ══════════════════════════ */
 
-const SAFE = (s) => s.toLowerCase().replace(/[^a-z0-9.]+/g, '-').replace(/^-|-$/g, '');
-
-/**
- * Uploads a File to the public `menu-images` bucket and returns both the
- * public URL (stored in menu_items.image_url and rendered by the site) and
- * the object path (stored in image_path so the old file can be removed).
- */
-export async function uploadMenuImage(file) {
-  if (isDemoBackend) return local.storeImage(file);
-
-  const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
-  const path = `items/${Date.now()}-${SAFE(file.name.replace(/\.[^.]+$/, ''))}.${ext}`;
-
-  const { error } = await requireSupabase().storage.from(IMAGE_BUCKET).upload(path, file, {
-    cacheControl: '31536000',
-    upsert: false,
-    contentType: file.type || undefined,
+function toBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    // result looks like "data:image/jpeg;base64,AAAA…" — strip the prefix.
+    reader.onload = () => resolve(String(reader.result).split(',')[1]);
+    reader.onerror = () => reject(new Error('Could not read that file.'));
+    reader.readAsDataURL(file);
   });
-  if (error) throw error;
-
-  const { data } = requireSupabase().storage.from(IMAGE_BUCKET).getPublicUrl(path);
-  return { url: data.publicUrl, path };
 }
 
-export async function removeMenuImage(path) {
-  if (!path || isDemoBackend) return;
-  const { error } = await requireSupabase().storage.from(IMAGE_BUCKET).remove([path]);
-  // A missing file should never block deleting the row it belonged to.
-  if (error) console.warn('Could not remove image', path, error.message);
+/**
+ * Uploads to the API, which writes the file under server/data/uploads and
+ * serves it from /uploads. Returns the public URL plus the stored filename
+ * so the old file can be removed when it is replaced.
+ */
+export async function uploadMenuImage(file) {
+  const dataBase64 = await toBase64(file);
+  const res = await api('/upload', {
+    method: 'POST',
+    auth: true,
+    body: { filename: file.name, contentType: file.type, dataBase64 },
+  });
+  return { url: res.url, path: res.path };
+}
+
+export async function removeMenuImage() {
+  // The API deletes the file alongside the row it belonged to, so there is
+  // nothing to do here. Kept so callers don't need to special-case it.
 }
 
 /* ══════════════════════════════ WRITE ══════════════════════════════ */
 
 export async function createMenuItem(payload) {
-  if (isDemoBackend) return local.createItem(payload);
-
-  const { data, error } = await requireSupabase().from('menu_items').insert(payload).select().single();
-  if (error) throw error;
-  return data;
+  return api('/menu-items', { method: 'POST', auth: true, body: payload });
 }
 
 export async function updateMenuItem(id, payload) {
-  if (isDemoBackend) return local.updateItem(id, payload);
-
-  const { data, error } = await requireSupabase()
-    .from('menu_items')
-    .update(payload)
-    .eq('id', id)
-    .select()
-    .single();
-  if (error) throw error;
-  return data;
+  return api(`/menu-items/${id}`, { method: 'PATCH', auth: true, body: payload });
 }
 
 export async function deleteMenuItem(item) {
-  if (isDemoBackend) return local.deleteItem(item);
-
-  const { error } = await requireSupabase().from('menu_items').delete().eq('id', item.id);
-  if (error) throw error;
-  // Only clean up images we uploaded ourselves (image_path is null for
-  // the hot-linked forno-qa.site photos that came from the seed).
-  await removeMenuImage(item.image_path);
+  return api(`/menu-items/${item.id}`, { method: 'DELETE', auth: true });
 }
 
 export async function setItemEnabled(id, isEnabled) {
@@ -128,30 +71,14 @@ export async function setItemEnabled(id, isEnabled) {
 /* ─────────────────────────── categories ─────────────────────────── */
 
 export async function createCategory(payload) {
-  if (isDemoBackend) return local.createCategory(payload);
-
-  const { data, error } = await requireSupabase().from('categories').insert(payload).select().single();
-  if (error) throw error;
-  return data;
+  return api('/categories', { method: 'POST', auth: true, body: payload });
 }
 
 export async function updateCategory(id, payload) {
-  if (isDemoBackend) return local.updateCategory(id, payload);
-
-  const { data, error } = await requireSupabase()
-    .from('categories')
-    .update(payload)
-    .eq('id', id)
-    .select()
-    .single();
-  if (error) throw error;
-  return data;
+  return api(`/categories/${id}`, { method: 'PATCH', auth: true, body: payload });
 }
 
 export async function deleteCategory(id) {
-  if (isDemoBackend) return local.deleteCategory(id);
-
-  // ON DELETE CASCADE removes the category's items too.
-  const { error } = await requireSupabase().from('categories').delete().eq('id', id);
-  if (error) throw error;
+  // The database cascades the delete to the category's dishes.
+  return api(`/categories/${id}`, { method: 'DELETE', auth: true });
 }

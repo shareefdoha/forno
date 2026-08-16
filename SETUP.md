@@ -1,111 +1,59 @@
-# Forno — React + Supabase setup
+# Forno — React + local PostgreSQL
 
-Your static `forno-redesign.html` is now a React app with a Supabase-backed
-menu and an admin CMS at `/admin`. Nothing about the visual design changed:
-the Tailwind tokens and your `<style>` block were carried over verbatim.
+Your static `forno-redesign.html` is now a React app with a PostgreSQL-backed
+menu and an admin CMS at `/admin`. The visual design is unchanged: the Tailwind
+tokens and your `<style>` block were carried over verbatim.
 
----
-
-## 0. Install Node.js (one time)
-
-Node isn't installed on this machine yet. Get the **LTS** build from
-<https://nodejs.org/en/download> (Windows Installer, x64), accept the defaults,
-then **open a new terminal** and check:
-
-```bash
-node -v
-```
-
-Anything 18.x or newer is fine.
+**No cloud account is involved.** The database runs on this machine.
 
 ---
 
-## 1. Install the project dependencies
-
-From `D:\2026\fiono\forn`:
+## Running it
 
 ```bash
 npm install
 ```
 
----
-
-## 2. Create the Supabase project
-
-1. Go to <https://supabase.com> → **New project**.
-2. Name it `forno`, pick a region close to Qatar (**Frankfurt** or **Mumbai**),
-   and set a strong database password (save it in your password manager).
-3. Wait ~2 minutes for provisioning.
-
----
-
-## 3. Create the tables, security rules and storage
-
-In the Supabase dashboard open **SQL Editor → New query**, then run these three
-files **in order**. Paste the whole file, press **Run**, confirm "Success", move
-to the next.
-
-| Order | File | What it does |
-|---|---|---|
-| 1 | `supabase/01_schema.sql` | `categories` + `menu_items` tables, indexes, and Row Level Security (public can read, only signed-in users can write) |
-| 2 | `supabase/02_storage.sql` | the public `menu-images` bucket + its upload policies |
-| 3 | `supabase/03_seed.sql` | your existing **15 categories and 67 dishes**, with the same prices and photo URLs |
-
-`03_seed.sql` is safe to re-run — it skips dishes that already exist.
-
-> If `02_storage.sql` errors with **"must be owner of table objects"**, some
-> projects lock down `storage.objects` from the SQL editor. Create the bucket
-> through the UI instead — the fallback steps are written at the top of that
-> file.
-
----
-
-## 4. Create the owner's login
-
-**Authentication → Users → Add user → Create new user**
-
-- Email: the client's address (e.g. `owner@forno-qa.site`)
-- Password: something strong
-- ✅ tick **Auto Confirm User** (otherwise they must click a confirmation email)
-
-That's the only account that can edit the menu. Add more the same way.
-
-> There is no public sign-up page on purpose. If you want to be extra safe,
-> go to **Authentication → Providers → Email** and turn **Enable sign-ups** off.
-
----
-
-## 5. Point the app at your project
-
-```bash
-cp .env.example .env
-```
-
-(on Windows PowerShell: `Copy-Item .env.example .env`)
-
-Open `.env` and fill in two values from **Project Settings → Data API** and
-**Project Settings → API Keys**:
-
-```
-VITE_SUPABASE_URL=https://YOUR-PROJECT-REF.supabase.co
-VITE_SUPABASE_ANON_KEY=eyJhbGciOi...
-VITE_SUPABASE_IMAGE_BUCKET=menu-images
-```
-
-- The **anon key is meant to be public** — RLS is what protects the data.
-- **Never** put the `service_role` key in `.env`; it bypasses RLS entirely.
-- `.env` is already in `.gitignore`.
-
----
-
-## 6. Run it
-
 ```bash
 npm run dev
 ```
 
-- Website → <http://localhost:5173>
-- Admin CMS → <http://localhost:5173/admin>
+That starts both halves at once:
+
+| | |
+|---|---|
+| Website | <http://localhost:5173> |
+| Admin CMS | <http://localhost:5173/admin> |
+| API | <http://localhost:3001> |
+
+Run them separately with `npm run dev:api` and `npm run dev:web` if you prefer.
+
+### Your login
+
+The account is created the first time the API starts. Set `ADMIN_EMAIL` and
+`ADMIN_PASSWORD` in `.env` (git-ignored) before that first run to choose them;
+otherwise a random password is generated and printed once in the API console.
+
+Credentials are deliberately **not** written down in this file — it is tracked
+in git. To change the password later, see *Managing the admin account* below.
+
+---
+
+## How it fits together
+
+```
+Browser  ──>  Vite (5173)  ──proxy──>  Express API (3001)  ──>  PostgreSQL
+                                              │
+                                              └──>  server/data/uploads (photos)
+```
+
+The database is **PGlite** — genuine PostgreSQL compiled to WebAssembly,
+running inside the Node process and persisting to `server/data/pgdata`. Same
+SQL, same types, same constraints as a server install, but nothing to install
+and no administrator rights needed.
+
+Everything the CMS writes goes into that database and survives restarts.
+Nothing is stored in the browser except your session token.
 
 ---
 
@@ -118,20 +66,15 @@ npm run dev
 | Google Fonts `<link>` | `index.html` `<head>` | Bodoni Moda + Manrope + IBM Plex Sans Arabic, unchanged |
 | `img/logo.png` | `public/img/logo.png` | Referenced as `/img/logo.png` |
 
-### Adding more CSS
+**Adding more CSS** — paste it at the bottom of `src/styles/custom.css`, under
+the marked line. It loads after Tailwind, so your rules win without `!important`.
 
-Paste it at the **bottom** of `src/styles/custom.css`, under the marked line.
-It loads after Tailwind, so your rules win without needing `!important`.
+**Adding images or fonts** — drop them in `public/`: `public/img/hero.jpg` →
+`src="/img/hero.jpg"`. Files there are copied to the build untouched.
 
-### Adding more images or fonts
-
-Drop files into `public/` — e.g. `public/img/hero.jpg` → use `src="/img/hero.jpg"`,
-`public/fonts/MyFont.woff2` → `url('/fonts/MyFont.woff2')` inside `custom.css`.
-Files in `public/` are copied to the build as-is and are never renamed.
-
-> Your `main.css` and `main.js` in the project root are **byte-identical copies of
-> the Tailwind CDN bundle**, not your own code. Tailwind is now compiled properly
-> at build time, so those two files are unused — you can delete them.
+> `main.css` and `main.js` in the project root are byte-identical copies of the
+> Tailwind CDN bundle, not your code. Tailwind is compiled at build time now, so
+> both are unused and safe to delete.
 
 ---
 
@@ -140,43 +83,46 @@ Files in `public/` are copied to the build as-is and are never renamed.
 **Menu items** (`/admin`)
 
 - Create, edit and delete dishes
-- Upload a photo (stored in Supabase Storage; the public URL is written to the row)
+- Upload a photo — stored in `server/data/uploads`, served from `/uploads`
 - Or paste an external image URL instead
-- Flip **Enabled / Disabled** with one click — the change is optimistic,
-  so it looks instant, and the site picks it up on the next load
+- Flip **Enabled / Disabled** with one click
 - Filter by category, search by name
-- English **and** Arabic name/description per dish
+- English **and** Arabic name and description per dish
 
 **Categories** (`/admin/categories`)
 
-- Add, rename, reorder (`sort_order`, lowest first) and delete categories
+- Add, rename, reorder (`sort_order`, lowest first) and delete
 - **Shown / Hidden** hides a category from the website without deleting it
 - Deleting a category deletes its dishes too (`ON DELETE CASCADE`)
 
 ### What Enabled / Disabled does
 
-Disabling a dish **removes it from the website**. It disappears from its
-category on the public menu, and its card and WhatsApp order link go with it.
-It stays in `/admin` — greyed switch, "Disabled" label — so the client can
-switch it back on at any time. Nothing is deleted, and the row keeps its
-photo, price and description.
+Disabling a dish **removes it from the website** — card and WhatsApp order link
+both go. It stays in `/admin` with a greyed switch so it can be switched back
+on. Nothing is deleted; price, photo and description are kept.
 
-Use it for a dish that's off the menu this week; use **Delete** for one
-that's gone for good.
+Use it for a dish that's off this week. Use **Delete** for one that's gone.
 
-The column behind it is `menu_items.is_enabled` (boolean, default true), and
-the filter is one line in `src/components/MenuSection.jsx`:
+### Empty categories disappear too
 
-```js
-const visible = useMemo(
-  () => (items.data ?? []).filter((i) => i.category_id === activeId && i.is_enabled),
-  [items.data, activeId],
-);
+A category only appears on the website while it has at least one **enabled**
+dish. Disable the last one and the tab goes, so nobody clicks through to an
+empty grid. `/admin` always lists every category.
+
+---
+
+## Managing the admin account
+
+Sessions last 14 days and are stored in the `sessions` table.
+
+To add a user or change a password without losing your menu, run this from the
+project root:
+
+```bash
+node -e "import('./server/db.js').then(async m => { await m.db.waitReady; await m.migrate(); const a = await import('./server/auth.js'); console.log(await a.createUser('you@example.com','your-new-password')); process.exit(0) })"
 ```
 
-If you'd rather disabled dishes stay visible as "sold out" instead of
-vanishing, drop the `&& i.is_enabled` here and render a badge in
-`MenuItem.jsx` — commit `6e4b349` has that version if you want it back.
+It creates the account, or updates the password if the email already exists.
 
 ---
 
@@ -184,26 +130,32 @@ vanishing, drop the `&& i.is_enabled` here and render a badge in
 
 ```
 index.html                  Vite entry — <head>, fonts, #root
-vite.config.js
+vite.config.js              proxies /api and /uploads to the API server
 tailwind.config.js          your CDN config, unchanged
-postcss.config.js
-.env                        your keys (git-ignored)
-public/
-  img/logo.png
-  _redirects                SPA fallback for Netlify
-supabase/
-  01_schema.sql  02_storage.sql  03_seed.sql
+.env                        optional ADMIN_EMAIL / ADMIN_PASSWORD (git-ignored)
+
+server/
+  index.js                  Express API — auth, CRUD, uploads
+  db.js                     PGlite (PostgreSQL) + schema
+  auth.js                   scrypt password hashing, session tokens
+  seed.js                   loads the 15 categories and 67 dishes
+  data/                     the database and uploaded photos (git-ignored)
+
+supabase/                   unused leftovers from the Supabase attempt;
+                            safe to delete
+
 src/
   main.jsx                  imports Tailwind then custom.css
-  App.jsx                   routes + React Query + Auth providers
+  App.jsx                   routes, React Query, auth provider
   styles/
     tailwind.css            @tailwind directives
     custom.css              ← YOUR ORIGINAL CSS
   lib/
-    supabase.js             the client (swap point if you ever move to Firebase)
+    apiClient.js            fetch wrapper + session token
     constants.js            phone, WhatsApp, social links, hero photos, reviews
+    demoData.js             the original 67 dishes — used by the server seed
     utils.js
-  api/menu.js               every Supabase read/write/upload call
+  api/menu.js               every API call the app makes
   hooks/
     useMenu.js              React Query hooks
     useReveal.js            the IntersectionObserver scroll reveal
@@ -211,13 +163,12 @@ src/
   context/
     LanguageContext.jsx     EN/AR toggle (replaces the data-i18n DOM swap)
     BookingContext.jsx      booking modal state
-    AuthContext.jsx         Supabase session
+    AuthContext.jsx         session handling
   i18n/translations.js      EN + AR strings, same keys as the old data-i18n
   components/
-    Header.jsx  Hero.jsx  Story.jsx  MenuSection.jsx  CategoryTabs.jsx
-    MenuItem.jsx  WhyForno.jsx  Reviews.jsx  Contact.jsx  BookingForm.jsx
-    Footer.jsx  BookingModal.jsx
-    admin/  AdminShell.jsx  ItemFormModal.jsx  ConfirmDialog.jsx  ProtectedRoute.jsx
+    Header  Hero  Story  MenuSection  CategoryTabs  MenuItem
+    WhyForno  Reviews  Contact  BookingForm  Footer  BookingModal
+    admin/  AdminShell  ItemFormModal  ConfirmDialog  ProtectedRoute
   pages/
     Home.jsx
     admin/  Login.jsx  Dashboard.jsx  Categories.jsx
@@ -225,21 +176,31 @@ src/
 
 ---
 
+## Backing up
+
+Everything lives in **`server/data/`** — the database and every uploaded photo.
+Copy that folder and you have a complete backup. Restore by copying it back.
+
+It's git-ignored, so it is **not** in your repository. Back it up separately.
+
+---
+
 ## Deploying
 
-```bash
-npm run build      # → dist/
-npm run preview    # check the production build locally
-```
+This is no longer a static site. `npm run build` produces `dist/`, but the app
+needs the API running to show anything, so you need a host that runs Node
+(Railway, Render, Fly.io, a VPS) rather than static hosting.
 
-Add the same two env vars in your host's dashboard (Vercel: Settings →
-Environment Variables; Netlify: Site configuration → Environment variables),
-then deploy `dist/`.
+To deploy you would:
 
-Because `/admin` is a client-side route, the host must serve `index.html` for
-unknown paths. That's already handled: `vercel.json` for Vercel,
-`public/_redirects` for Netlify. On Apache/Nginx you need the equivalent
-rewrite rule, or `/admin` will 404 on refresh.
+1. Serve `dist/` as static files from the Express app (a few lines in `server/index.js`)
+2. Run `node server/index.js` on the host
+3. Persist `server/data/` on a real disk or volume — on ephemeral filesystems
+   the database is wiped on every redeploy
+
+PGlite is single-process, which is fine for one restaurant site. If you ever
+need multiple server instances, move to a normal PostgreSQL server — the schema
+in `server/db.js` transfers unchanged.
 
 ---
 
@@ -247,18 +208,9 @@ rewrite rule, or `/admin` will 404 on refresh.
 
 | Symptom | Cause |
 |---|---|
-| `Missing Supabase env vars` on startup | No `.env`, or you didn't restart `npm run dev` after creating it |
-| Menu is empty but there's no error | `03_seed.sql` wasn't run, or every category is set to **Hidden** |
-| `new row violates row-level security policy` when saving | You're signed out — go to `/admin/login` |
-| Image uploads fail with a 403 | `02_storage.sql` wasn't run, or the bucket name in `.env` doesn't match |
-| `/admin` 404s after a refresh in production | Missing SPA rewrite on the host (see Deploying) |
-| Fonts look wrong | The Google Fonts `<link>` in `index.html` was removed or is blocked |
-
-### Empty categories disappear too
-
-A category is only shown on the website while it has at least one **enabled**
-dish. Disable the last one and the whole tab goes, so nobody clicks through
-to an empty grid; enable any dish in it and the tab comes straight back.
-
-`/admin` always lists every category regardless, so nothing becomes
-unreachable in the CMS.
+| "Cannot reach the API server" | The API isn't running — use `npm run dev`, not `npm run dev:web` |
+| Menu empty, no error | Database seeded but every dish is disabled, or every category hidden |
+| Login says "Wrong email or password" | Wrong credentials, or `server/data/pgdata` was deleted and rebuilt with different ones |
+| Signed out unexpectedly | Session older than 14 days, or the database was reset |
+| Uploads fail | `server/data/uploads` isn't writable |
+| Port 3001 in use | Set `API_PORT` in `.env` and update the proxy target in `vite.config.js` |
