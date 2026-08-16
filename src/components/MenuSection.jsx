@@ -4,7 +4,6 @@ import { useReveal } from '../hooks/useReveal';
 import { useCategories, useMenuItems } from '../hooks/useMenu';
 import CategoryTabs from './CategoryTabs';
 import MenuItem from './MenuItem';
-import { isSupabaseConfigured, isDemoBackend } from '../lib/supabase';
 
 /** The category the page opened on in the original build. */
 const DEFAULT_SLUG = 'pasta';
@@ -61,16 +60,9 @@ export default function MenuSection() {
           <p className="mt-5 text-cream/60">{t('menu.sub')}</p>
         </div>
 
-        {/* Reading from the bundled preview data, not a database. Say so
-            plainly so nobody mistakes this for a live CMS. */}
-        {!isSupabaseConfigured && (
-          <p className="mx-auto mt-10 max-w-xl rounded-2xl border border-amber/25 bg-amber/[.06] px-5 py-3 text-center text-xs leading-relaxed text-cream/60">
-            {isDemoBackend
-              ? 'Demo backend — edits made in /admin show up here, but save to this browser only.'
-              : 'Preview data — read-only.'}{' '}
-            Connect Supabase in <code className="text-amber">.env</code> to go live. See SETUP.md
-          </p>
-        )}
+        {/* No backend-status notice here on purpose — guests shouldn't see
+            internal state. The warning lives in /admin, where the person
+            making edits needs to know whether they persist. */}
 
         {/* tabs */}
         {tabCategories.length > 0 && (
