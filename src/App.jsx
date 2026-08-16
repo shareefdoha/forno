@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
@@ -6,9 +7,20 @@ import { LanguageProvider } from './context/LanguageContext';
 import ProtectedRoute from './components/admin/ProtectedRoute';
 
 import Home from './pages/Home';
-import Login from './pages/admin/Login';
-import Dashboard from './pages/admin/Dashboard';
-import Categories from './pages/admin/Categories';
+
+// The CMS is for one person; guests shouldn't download it. Split into its own
+// chunk that loads only when someone actually visits /admin.
+const Login = lazy(() => import('./pages/admin/Login'));
+const Dashboard = lazy(() => import('./pages/admin/Dashboard'));
+const Categories = lazy(() => import('./pages/admin/Categories'));
+
+function AdminFallback() {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-ink text-cream/50">
+      <p className="text-sm tracking-wide">Loading…</p>
+    </div>
+  );
+}
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -36,13 +48,22 @@ export default function App() {
               }
             />
 
-            {/* admin CMS */}
-            <Route path="/admin/login" element={<Login />} />
+            {/* admin CMS — lazy-loaded, see the imports above */}
+            <Route
+              path="/admin/login"
+              element={
+                <Suspense fallback={<AdminFallback />}>
+                  <Login />
+                </Suspense>
+              }
+            />
             <Route
               path="/admin"
               element={
                 <ProtectedRoute>
-                  <Dashboard />
+                  <Suspense fallback={<AdminFallback />}>
+                    <Dashboard />
+                  </Suspense>
                 </ProtectedRoute>
               }
             />
@@ -50,7 +71,9 @@ export default function App() {
               path="/admin/categories"
               element={
                 <ProtectedRoute>
-                  <Categories />
+                  <Suspense fallback={<AdminFallback />}>
+                    <Categories />
+                  </Suspense>
                 </ProtectedRoute>
               }
             />
