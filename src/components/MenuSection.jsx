@@ -4,7 +4,6 @@ import { useReveal } from '../hooks/useReveal';
 import { useCategories, useMenuItems } from '../hooks/useMenu';
 import CategoryTabs from './CategoryTabs';
 import MenuItem from './MenuItem';
-import { FULL_MENU_URL } from '../lib/constants';
 import { isSupabaseConfigured, isDemoBackend } from '../lib/supabase';
 
 /** The category the page opened on in the original build. */
@@ -13,7 +12,6 @@ const DEFAULT_SLUG = 'pasta';
 export default function MenuSection() {
   const { t } = useLang();
   const headRef = useReveal();
-  const footRef = useReveal();
 
   const categories = useCategories();
   const items = useMenuItems();
@@ -86,17 +84,6 @@ export default function MenuSection() {
         {!isLoading && !error && visible.length === 0 && (
           <p className="mt-10 text-center text-sm text-cream/50">{t('menu.empty')}</p>
         )}
-
-        <div ref={footRef} className="reveal mt-14 text-center">
-          <a
-            href={FULL_MENU_URL}
-            target="_blank"
-            rel="noopener"
-            className="btn-ghost inline-flex rounded-full px-8 py-4 text-sm font-semibold tracking-wide transition-all duration-300"
-          >
-            {t('menu.full')}
-          </a>
-        </div>
       </div>
     </section>
   );

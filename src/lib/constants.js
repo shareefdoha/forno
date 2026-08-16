@@ -13,8 +13,6 @@ export const SOCIAL = {
   maps: 'https://maps.app.goo.gl/5qjJR9DAZ8FEp9wdA',
 };
 
-export const FULL_MENU_URL = 'https://forno-qa.site/menu';
-
 export const MAP_EMBED =
   'https://www.google.com/maps?q=Al%20Wajbah%20Service%20Street%2C%20Al%20Rayyan%2C%20Qatar&output=embed';
 
