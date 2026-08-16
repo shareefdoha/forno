@@ -142,7 +142,7 @@ Files in `public/` are copied to the build as-is and are never renamed.
 - Create, edit and delete dishes
 - Upload a photo (stored in Supabase Storage; the public URL is written to the row)
 - Or paste an external image URL instead
-- Flip **In stock / Out of stock** with one click — the change is optimistic,
+- Flip **Enabled / Disabled** with one click — the change is optimistic,
   so it looks instant, and the site picks it up on the next load
 - Filter by category, search by name
 - English **and** Arabic name/description per dish
@@ -153,18 +153,30 @@ Files in `public/` are copied to the build as-is and are never renamed.
 - **Shown / Hidden** hides a category from the website without deleting it
 - Deleting a category deletes its dishes too (`ON DELETE CASCADE`)
 
-### How out-of-stock dishes appear
+### What Enabled / Disabled does
 
-They stay on the menu, greyed out with a **Sold out** badge, and are no longer
-clickable through to WhatsApp. If the client would rather they vanish entirely,
-change one line in `src/components/MenuSection.jsx`:
+Disabling a dish **removes it from the website**. It disappears from its
+category on the public menu, and its card and WhatsApp order link go with it.
+It stays in `/admin` — greyed switch, "Disabled" label — so the client can
+switch it back on at any time. Nothing is deleted, and the row keeps its
+photo, price and description.
+
+Use it for a dish that's off the menu this week; use **Delete** for one
+that's gone for good.
+
+The column behind it is `menu_items.is_enabled` (boolean, default true), and
+the filter is one line in `src/components/MenuSection.jsx`:
 
 ```js
 const visible = useMemo(
-  () => (items.data ?? []).filter((i) => i.category_id === activeId && i.is_available),
+  () => (items.data ?? []).filter((i) => i.category_id === activeId && i.is_enabled),
   [items.data, activeId],
 );
 ```
+
+If you'd rather disabled dishes stay visible as "sold out" instead of
+vanishing, drop the `&& i.is_enabled` here and render a badge in
+`MenuItem.jsx` — commit `6e4b349` has that version if you want it back.
 
 ---
 

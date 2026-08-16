@@ -27,7 +27,7 @@ create table if not exists public.menu_items (
   price           numeric(10, 2) not null default 0 check (price >= 0),
   image_url       text,          -- public URL rendered by the site
   image_path      text,          -- object path inside the Storage bucket (so we can delete it)
-  is_available    boolean not null default true,   -- the In Stock / Out of Stock toggle
+  is_enabled      boolean not null default true,   -- Enabled / Disabled toggle in the CMS
   sort_order      integer not null default 0,
   created_at      timestamptz not null default now(),
   updated_at      timestamptz not null default now()

@@ -43,7 +43,7 @@ export async function fetchMenuItems({ categoryId = null } = {}) {
   let q = requireSupabase()
     .from('menu_items')
     .select(
-      'id, category_id, name_en, name_ar, description_en, description_ar, price, image_url, image_path, is_available, sort_order',
+      'id, category_id, name_en, name_ar, description_en, description_ar, price, image_url, image_path, is_enabled, sort_order',
     )
     .order('sort_order', { ascending: true })
     .order('name_en', { ascending: true });
@@ -121,8 +121,8 @@ export async function deleteMenuItem(item) {
   await removeMenuImage(item.image_path);
 }
 
-export async function setItemAvailability(id, isAvailable) {
-  return updateMenuItem(id, { is_available: isAvailable });
+export async function setItemEnabled(id, isEnabled) {
+  return updateMenuItem(id, { is_enabled: isEnabled });
 }
 
 /* ─────────────────────────── categories ─────────────────────────── */

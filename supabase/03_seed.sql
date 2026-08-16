@@ -98,7 +98,7 @@ with src (slug, name_en, description_en, price, image_url, sort_order) as (value
   ('dessert', 'Lotus Cake', 'Lotus Biscoff, whipping cream mixed with cheese.', 19, 'https://forno-qa.site/imgPro/1770840353.jpg', 20),
   ('dessert', 'Cheesecake', 'Your choice of blueberry or strawberry cheesecake', 19, 'https://forno-qa.site/imgPro/1770839929.jpg', 30)
 )
-insert into public.menu_items (category_id, name_en, description_en, price, image_url, sort_order, is_available)
+insert into public.menu_items (category_id, name_en, description_en, price, image_url, sort_order, is_enabled)
 select c.id, s.name_en, s.description_en, s.price, s.image_url, s.sort_order, true
 from src s
 join public.categories c on c.slug = s.slug

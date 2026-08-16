@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import AdminShell from '../../components/admin/AdminShell';
 import ItemFormModal from '../../components/admin/ItemFormModal';
 import ConfirmDialog from '../../components/admin/ConfirmDialog';
-import { useCategories, useMenuItems, useToggleAvailability, useDeleteItem } from '../../hooks/useMenu';
+import { useCategories, useMenuItems, useToggleEnabled, useDeleteItem } from '../../hooks/useMenu';
 import { formatPrice } from '../../lib/utils';
 import { isDemoBackend } from '../../lib/supabase';
 import { resetAll } from '../../lib/localBackend';
@@ -12,7 +12,7 @@ export default function Dashboard() {
   // Admin sees inactive categories too, so nothing can go missing from the CMS.
   const categories = useCategories({ onlyActive: false });
   const items = useMenuItems();
-  const toggle = useToggleAvailability();
+  const toggle = useToggleEnabled();
   const del = useDeleteItem();
   const qc = useQueryClient();
 
@@ -37,7 +37,7 @@ export default function Dashboard() {
 
   const stats = useMemo(() => {
     const all = items.data ?? [];
-    return { total: all.length, out: all.filter((i) => !i.is_available).length };
+    return { total: all.length, disabled: all.filter((i) => !i.is_enabled).length };
   }, [items.data]);
 
   return (
@@ -56,7 +56,7 @@ export default function Dashboard() {
       <div className="grid gap-4 sm:grid-cols-3">
         <Stat label="Dishes" value={stats.total} />
         <Stat label="Categories" value={(categories.data ?? []).length} />
-        <Stat label="Out of stock" value={stats.out} />
+        <Stat label="Disabled" value={stats.disabled} />
       </div>
 
       {isDemoBackend && (
@@ -135,12 +135,12 @@ export default function Dashboard() {
               </p>
             </div>
 
-            <AvailabilitySwitch
-              checked={item.is_available}
+            <EnabledSwitch
+              checked={item.is_enabled}
               onChange={(v) => {
                 setActionError('');
                 toggle.mutate(
-                  { id: item.id, isAvailable: v },
+                  { id: item.id, isEnabled: v },
                   { onError: (err) => setActionError(err.message) },
                 );
               }}
@@ -204,7 +204,7 @@ function Stat({ label, value }) {
   );
 }
 
-function AvailabilitySwitch({ checked, onChange }) {
+function EnabledSwitch({ checked, onChange }) {
   return (
     <button
       type="button"
@@ -212,7 +212,11 @@ function AvailabilitySwitch({ checked, onChange }) {
       aria-checked={checked}
       onClick={() => onChange(!checked)}
       className="flex items-center gap-3"
-      title={checked ? 'In stock — click to mark out of stock' : 'Out of stock — click to mark in stock'}
+      title={
+        checked
+          ? 'Enabled — click to disable and hide it from the website'
+          : 'Disabled — click to enable and show it on the website'
+      }
     >
       <span
         className={`relative h-6 w-11 rounded-full transition ${checked ? 'bg-amber' : 'bg-cream/20'}`}
@@ -224,7 +228,7 @@ function AvailabilitySwitch({ checked, onChange }) {
         />
       </span>
       <span className={`w-24 text-left text-xs font-semibold ${checked ? 'text-amber' : 'text-cream/40'}`}>
-        {checked ? 'In stock' : 'Out of stock'}
+        {checked ? 'Enabled' : 'Disabled'}
       </span>
     </button>
   );

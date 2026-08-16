@@ -17,7 +17,7 @@ const blank = (categoryId) => ({
   price: '',
   image_url: '',
   image_path: null,
-  is_available: true,
+  is_enabled: true,
   sort_order: 0,
 });
 
@@ -38,7 +38,7 @@ export default function ItemFormModal({ item, categories, defaultCategoryId, onC
           price: String(item.price ?? ''),
           image_url: item.image_url ?? '',
           image_path: item.image_path ?? null,
-          is_available: item.is_available ?? true,
+          is_enabled: item.is_enabled ?? true,
           sort_order: item.sort_order ?? 0,
         }
       : blank(defaultCategoryId),
@@ -134,7 +134,7 @@ export default function ItemFormModal({ item, categories, defaultCategoryId, onC
       price,
       image_url: form.image_url.trim() || null,
       image_path: form.image_path,
-      is_available: form.is_available,
+      is_enabled: form.is_enabled,
       sort_order: Number(form.sort_order) || 0,
     };
 
@@ -262,8 +262,8 @@ export default function ItemFormModal({ item, categories, defaultCategoryId, onC
               <input id="i-sort" type="number" value={form.sort_order} onChange={set('sort_order')} className={FIELD} />
             </div>
             <label className="flex cursor-pointer items-center gap-3 self-end pb-3">
-              <input type="checkbox" checked={form.is_available} onChange={set('is_available')} className="h-5 w-5 accent-[#FFC107]" />
-              <span className="text-sm text-cream/75">In stock</span>
+              <input type="checkbox" checked={form.is_enabled} onChange={set('is_enabled')} className="h-5 w-5 accent-[#FFC107]" />
+              <span className="text-sm text-cream/75">Enabled (visible on the website)</span>
             </label>
           </div>
 

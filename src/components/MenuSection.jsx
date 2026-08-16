@@ -31,8 +31,10 @@ export default function MenuSection() {
     setActiveId((list.find((c) => c.slug === DEFAULT_SLUG) ?? list[0]).id);
   }, [categories.data, activeId]);
 
+  // Disabled dishes are hidden from the website entirely — that is what the
+  // Enabled/Disabled toggle in the CMS means. They stay visible in /admin.
   const visible = useMemo(
-    () => (items.data ?? []).filter((i) => i.category_id === activeId),
+    () => (items.data ?? []).filter((i) => i.category_id === activeId && i.is_enabled),
     [items.data, activeId],
   );
 

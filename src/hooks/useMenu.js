@@ -52,19 +52,19 @@ export function useDeleteItem() {
   return useMutation({ mutationFn: api.deleteMenuItem, onSuccess: invalidate });
 }
 
-export function useToggleAvailability() {
+export function useToggleEnabled() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, isAvailable }) => api.setItemAvailability(id, isAvailable),
+    mutationFn: ({ id, isEnabled }) => api.setItemEnabled(id, isEnabled),
     // Optimistic flip so the switch feels instant in the dashboard.
-    onMutate: async ({ id, isAvailable }) => {
+    onMutate: async ({ id, isEnabled }) => {
       await qc.cancelQueries({ queryKey: ['menu_items'] });
       const snapshots = qc.getQueriesData({ queryKey: ['menu_items'] });
       snapshots.forEach(([key, rows]) => {
         if (!Array.isArray(rows)) return;
         qc.setQueryData(
           key,
-          rows.map((r) => (r.id === id ? { ...r, is_available: isAvailable } : r)),
+          rows.map((r) => (r.id === id ? { ...r, is_enabled: isEnabled } : r)),
         );
       });
       return { snapshots };

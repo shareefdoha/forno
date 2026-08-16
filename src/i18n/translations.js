@@ -43,7 +43,6 @@ export const EN = {
   'menu.empty': 'Nothing in this category yet.',
 
   'dish.order': 'Order on WhatsApp',
-  'dish.soldout': 'Sold out',
 
   'why.eyebrow': 'Why Forno',
   'why.h': 'What you can count on, every visit.',
@@ -129,7 +128,6 @@ export const AR = {
   'menu.empty': 'لا توجد أطباق في هذا الصنف بعد.',
 
   'dish.order': 'اطلب عبر واتساب',
-  'dish.soldout': 'غير متوفر',
 
   'why.eyebrow': 'لماذا فورنو',
   'why.h': 'ما يمكنك الاعتماد عليه في كل زيارة.',
