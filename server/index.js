@@ -242,8 +242,13 @@ async function start() {
 
   const servingSite = fs.existsSync(path.join(DIST, 'index.html'));
 
-  app.listen(PORT, () => {
-    console.log(`\n  Forno ${servingSite ? 'site + API' : 'API'}  ->  http://localhost:${PORT}`);
+  // Bind all interfaces, not just loopback. Hosts route traffic in from
+  // outside the container, so a localhost-only bind looks like a dead service
+  // and the health check fails.
+  const HOST = process.env.HOST || '0.0.0.0';
+
+  app.listen(PORT, HOST, () => {
+    console.log(`\n  Forno ${servingSite ? 'site + API' : 'API'}  ->  http://${HOST}:${PORT}`);
     console.log(`  Database   ->  PostgreSQL (PGlite), server/data/pgdata`);
     console.log(`  Menu       ->  ${c.n} categories, ${i.n} dishes${seeded.skipped ? ' (already present)' : ' (seeded)'}`);
     if (servingSite) console.log(`  Serving    ->  dist/ (production build)`);
