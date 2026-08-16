@@ -1,0 +1,37 @@
+# Render Blueprint — https://render.com/docs/blueprint-spec
+#
+# In Render: New  ->  Blueprint  ->  pick the shareefdoha/forno repo.
+# It reads this file and creates the service with the right settings.
+#
+# ⚠ The disk below is what keeps your menu and uploaded photos alive between
+#   deploys. Disks require a paid instance type (Starter and up). On the free
+#   plan there is no disk, so the database is rebuilt from the seed on every
+#   deploy and restart, and everything the client edited is lost.
+
+services:
+  - type: web
+    name: forno
+    runtime: node
+    plan: starter               # 'free' has no disk — see the warning above
+    region: frankfurt           # closest Render region to Qatar
+    branch: main
+
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+
+    healthCheckPath: /api/health
+
+    disk:
+      name: forno-data
+      mountPath: /var/data      # DATA_DIR points here
+      sizeGB: 1
+
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: DATA_DIR
+        value: /var/data
+      - key: ADMIN_EMAIL
+        sync: false             # set this in the Render dashboard
+      - key: ADMIN_PASSWORD
+        sync: false             # set this in the Render dashboard — never commit it

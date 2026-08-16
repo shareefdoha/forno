@@ -1,14 +1,23 @@
+import { ROOT } from './env.js';           // must be first: it populates process.env
 import { PGlite } from '@electric-sql/pglite';
-import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import fs from 'node:fs';
 
-const here = path.dirname(fileURLToPath(import.meta.url));
-export const ROOT = path.join(here, '..');
-export const DATA_DIR = path.join(ROOT, 'server', 'data', 'pgdata');
-export const UPLOAD_DIR = path.join(ROOT, 'server', 'data', 'uploads');
+export { ROOT };
 
-fs.mkdirSync(path.dirname(DATA_DIR), { recursive: true });
+/**
+ * Everything persistent lives under DATA_DIR. Locally that's server/data;
+ * on a host it should point at a mounted disk (Render: /var/data), otherwise
+ * the database is wiped on every deploy.
+ */
+const BASE = process.env.DATA_DIR
+  ? path.resolve(process.env.DATA_DIR)
+  : path.join(ROOT, 'server', 'data');
+
+export const DATA_DIR = path.join(BASE, 'pgdata');
+export const UPLOAD_DIR = path.join(BASE, 'uploads');
+
+fs.mkdirSync(BASE, { recursive: true });
 fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 
 /**

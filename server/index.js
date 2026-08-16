@@ -12,18 +12,8 @@ import {
 } from './auth.js';
 
 // Hosts usually inject PORT; API_PORT is the local override.
+// .env is already loaded by server/env.js, imported via db.js above.
 const PORT = Number(process.env.PORT || process.env.API_PORT || 3001);
-
-/* ── read .env without pulling in a dependency ── */
-function loadEnv() {
-  const file = path.join(ROOT, '.env');
-  if (!fs.existsSync(file)) return;
-  for (const line of fs.readFileSync(file, 'utf8').split(/\r?\n/)) {
-    const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)$/i);
-    if (m && !process.env[m[1]]) process.env[m[1]] = m[2].trim();
-  }
-}
-loadEnv();
 
 const app = express();
 app.use(cors());
