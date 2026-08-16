@@ -18,16 +18,25 @@ export default function MenuSection() {
 
   const [activeId, setActiveId] = useState(null);
 
+  // A category with nothing to sell doesn't belong on the website. Once every
+  // dish in it is disabled (or it simply has none yet), the tab goes too —
+  // otherwise guests click through to an empty grid. The CMS still lists it.
+  const tabCategories = useMemo(() => {
+    const list = categories.data ?? [];
+    const rows = items.data;
+    if (!rows) return [];   // first load — the grid shows skeletons instead
+    return list.filter((c) => rows.some((i) => i.category_id === c.id && i.is_enabled));
+  }, [categories.data, items.data]);
+
   // Land on "Pasta" (or the first category if the owner renamed/removed it).
-  // Re-runs when the selected category disappears from the list — after a
-  // delete in the CMS, or when the preview data is replaced by Supabase —
+  // Re-runs when the selected category leaves the list — after a delete, after
+  // its last dish is disabled, or when preview data is replaced by Supabase —
   // which would otherwise leave the grid permanently empty.
   useEffect(() => {
-    const list = categories.data;
-    if (!list?.length) return;
-    if (activeId && list.some((c) => c.id === activeId)) return;
-    setActiveId((list.find((c) => c.slug === DEFAULT_SLUG) ?? list[0]).id);
-  }, [categories.data, activeId]);
+    if (!tabCategories.length) return;
+    if (activeId && tabCategories.some((c) => c.id === activeId)) return;
+    setActiveId((tabCategories.find((c) => c.slug === DEFAULT_SLUG) ?? tabCategories[0]).id);
+  }, [tabCategories, activeId]);
 
   // Disabled dishes are hidden from the website entirely — that is what the
   // Enabled/Disabled toggle in the CMS means. They stay visible in /admin.
@@ -64,8 +73,8 @@ export default function MenuSection() {
         )}
 
         {/* tabs */}
-        {categories.data?.length > 0 && (
-          <CategoryTabs categories={categories.data} activeId={activeId} onChange={setActiveId} />
+        {tabCategories.length > 0 && (
+          <CategoryTabs categories={tabCategories} activeId={activeId} onChange={setActiveId} />
         )}
 
         {/* grid */}
@@ -82,7 +91,9 @@ export default function MenuSection() {
 
         {error && <p className="mt-10 text-center text-sm text-cream/50">{t('menu.error')}</p>}
         {!isLoading && !error && visible.length === 0 && (
-          <p className="mt-10 text-center text-sm text-cream/50">{t('menu.empty')}</p>
+          <p className="mt-10 text-center text-sm text-cream/50">
+            {tabCategories.length === 0 ? t('menu.none') : t('menu.empty')}
+          </p>
         )}
       </div>
     </section>

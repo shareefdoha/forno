@@ -253,3 +253,12 @@ rewrite rule, or `/admin` will 404 on refresh.
 | Image uploads fail with a 403 | `02_storage.sql` wasn't run, or the bucket name in `.env` doesn't match |
 | `/admin` 404s after a refresh in production | Missing SPA rewrite on the host (see Deploying) |
 | Fonts look wrong | The Google Fonts `<link>` in `index.html` was removed or is blocked |
+
+### Empty categories disappear too
+
+A category is only shown on the website while it has at least one **enabled**
+dish. Disable the last one and the whole tab goes, so nobody clicks through
+to an empty grid; enable any dish in it and the tab comes straight back.
+
+`/admin` always lists every category regardless, so nothing becomes
+unreachable in the CMS.

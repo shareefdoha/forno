@@ -40,6 +40,7 @@ export const EN = {
   'menu.loading': 'Loading the menu…',
   'menu.error': "We couldn't load the menu right now. Please try again.",
   'menu.empty': 'Nothing in this category yet.',
+  'menu.none': 'Our menu is being updated — please check back shortly.',
 
   'dish.order': 'Order on WhatsApp',
 
@@ -124,6 +125,7 @@ export const AR = {
   'menu.loading': 'جارٍ تحميل المنيو…',
   'menu.error': 'تعذّر تحميل المنيو حاليًا. برجاء المحاولة مرة أخرى.',
   'menu.empty': 'لا توجد أطباق في هذا الصنف بعد.',
+  'menu.none': 'يتم تحديث المنيو حاليًا — برجاء المحاولة بعد قليل.',
 
   'dish.order': 'اطلب عبر واتساب',
 
