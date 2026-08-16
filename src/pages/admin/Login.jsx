@@ -2,6 +2,19 @@ import { useState } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
+/**
+ * Only ever redirect to a path inside this site.
+ *
+ * `from` originates in ProtectedRoute as location.pathname, so it reflects
+ * whatever URL the visitor arrived on. A crafted path like `/\evil.com` or
+ * `//evil.com` is treated by browsers as protocol-relative and would send the
+ * user off-site right after they sign in. Require a single leading slash that
+ * isn't followed by another slash or a backslash.
+ */
+function safeRedirect(target) {
+  return typeof target === 'string' && /^\/(?![/\\])/.test(target) ? target : '/admin';
+}
+
 export default function Login() {
   const { session, loading, signIn } = useAuth();
   const navigate = useNavigate();
@@ -13,7 +26,7 @@ export default function Login() {
   const [busy, setBusy] = useState(false);
 
   if (!loading && session) {
-    return <Navigate to={location.state?.from || '/admin'} replace />;
+    return <Navigate to={safeRedirect(location.state?.from)} replace />;
   }
 
   const onSubmit = async (e) => {
@@ -22,7 +35,7 @@ export default function Login() {
     setBusy(true);
     try {
       await signIn(email.trim(), password);
-      navigate(location.state?.from || '/admin', { replace: true });
+      navigate(safeRedirect(location.state?.from), { replace: true });
     } catch (err) {
       setError(err.message || 'Could not sign in.');
     } finally {
