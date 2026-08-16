@@ -11,7 +11,8 @@ import {
   userForToken, requireAuth, purgeExpiredSessions,
 } from './auth.js';
 
-const PORT = Number(process.env.API_PORT || 3001);
+// Hosts usually inject PORT; API_PORT is the local override.
+const PORT = Number(process.env.PORT || process.env.API_PORT || 3001);
 
 /* ── read .env without pulling in a dependency ── */
 function loadEnv() {
@@ -201,6 +202,28 @@ app.post('/api/upload', requireAuth(), wrap(async (req, res) => {
   res.status(201).json({ url: `/uploads/${name}`, path: name });
 }));
 
+/* ═══════════════════════ built frontend ═══════════════════════ */
+
+/**
+ * In production one process serves both halves: `npm run build` writes dist/,
+ * and Express serves it here. Any non-API path falls through to index.html so
+ * client-side routes like /admin survive a refresh.
+ *
+ * In development this block is inert (no dist/ yet) and Vite serves the app
+ * on 5173, proxying /api here.
+ */
+const DIST = path.join(ROOT, 'dist');
+
+if (fs.existsSync(path.join(DIST, 'index.html'))) {
+  app.use(express.static(DIST, { index: false }));
+
+  app.use((req, res, next) => {
+    if (req.method !== 'GET' && req.method !== 'HEAD') return next();
+    if (req.path.startsWith('/api') || req.path.startsWith('/uploads')) return next();
+    res.sendFile(path.join(DIST, 'index.html'));
+  });
+}
+
 /* ════════════════════════════ boot ════════════════════════════ */
 
 async function start() {
@@ -227,10 +250,14 @@ async function start() {
   const c = await one('select count(*)::int as n from categories');
   const i = await one('select count(*)::int as n from menu_items');
 
+  const servingSite = fs.existsSync(path.join(DIST, 'index.html'));
+
   app.listen(PORT, () => {
-    console.log(`\n  Forno API  ->  http://localhost:${PORT}`);
+    console.log(`\n  Forno ${servingSite ? 'site + API' : 'API'}  ->  http://localhost:${PORT}`);
     console.log(`  Database   ->  PostgreSQL (PGlite), server/data/pgdata`);
-    console.log(`  Menu       ->  ${c.n} categories, ${i.n} dishes${seeded.skipped ? ' (already present)' : ' (seeded)'}\n`);
+    console.log(`  Menu       ->  ${c.n} categories, ${i.n} dishes${seeded.skipped ? ' (already present)' : ' (seeded)'}`);
+    if (servingSite) console.log(`  Serving    ->  dist/ (production build)`);
+    console.log('');
   });
 }
 
