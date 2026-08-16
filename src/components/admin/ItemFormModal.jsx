@@ -46,19 +46,32 @@ export default function ItemFormModal({ item, categories, defaultCategoryId, onC
 
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
-  // Images uploaded during this session that must be cleaned up if the user
-  // cancels, or that replaced an older file once the save succeeds.
-  const staged = useRef({ added: [], replaced: null });
+  // Storage bookkeeping:
+  //   added   — uploaded in this session; delete them if the user cancels
+  //   orphans — files the row pointed at before we detached them; delete
+  //             them only once the save succeeds, never on cancel
+  const staged = useRef({ added: [], orphans: [] });
+
+  /** Record the file we're about to stop pointing at, so save can clean it up. */
+  const detach = (path) => {
+    if (path) staged.current.orphans.push(path);
+  };
+
+  // Escape must go through cancel(), not onClose(), or photos uploaded in
+  // this session are left behind in Storage with nothing pointing at them.
+  const cancelRef = useRef(null);
 
   useEffect(() => {
-    const onKey = (e) => e.key === 'Escape' && onClose();
+    const onKey = (e) => {
+      if (e.key === 'Escape') cancelRef.current?.();
+    };
     window.addEventListener('keydown', onKey);
     document.body.style.overflow = 'hidden';
     return () => {
       window.removeEventListener('keydown', onKey);
       document.body.style.overflow = '';
     };
-  }, [onClose]);
+  }, []);
 
   const set = (k) => (e) =>
     setForm((f) => ({ ...f, [k]: e.target.type === 'checkbox' ? e.target.checked : e.target.value }));
@@ -80,8 +93,7 @@ export default function ItemFormModal({ item, categories, defaultCategoryId, onC
     setUploading(true);
     try {
       const { url, path } = await uploadMenuImage(file);
-      // Remember the file we are about to orphan so we can delete it on save.
-      if (form.image_path && !staged.current.replaced) staged.current.replaced = form.image_path;
+      detach(form.image_path);
       staged.current.added.push(path);
       setForm((f) => ({ ...f, image_url: url, image_path: path }));
     } catch (err) {
@@ -93,10 +105,12 @@ export default function ItemFormModal({ item, categories, defaultCategoryId, onC
   };
 
   const cancel = async () => {
-    // Nothing was saved — remove anything we uploaded in this session.
+    // Nothing was saved, so the row still points at its original photo —
+    // only remove what we uploaded in this session.
     for (const p of staged.current.added) await removeMenuImage(p);
     onClose();
   };
+  cancelRef.current = cancel;
 
   const onSubmit = async (e) => {
     e.preventDefault();
@@ -105,13 +119,19 @@ export default function ItemFormModal({ item, categories, defaultCategoryId, onC
     if (!form.category_id) return setError('Pick a category.');
     if (!form.name_en.trim()) return setError('An English name is required.');
 
+    // `Number('abc') || 0` used to swallow typos as a free dish, and a
+    // negative value would surface as a raw Postgres check-constraint error.
+    const price = Number(form.price);
+    if (form.price === '' || Number.isNaN(price)) return setError('Enter a price in numbers.');
+    if (price < 0) return setError('Price cannot be negative.');
+
     const payload = {
       category_id: form.category_id,
       name_en: form.name_en.trim(),
       name_ar: form.name_ar.trim(),
       description_en: form.description_en.trim(),
       description_ar: form.description_ar.trim(),
-      price: Number(form.price) || 0,
+      price,
       image_url: form.image_url.trim() || null,
       image_path: form.image_path,
       is_available: form.is_available,
@@ -122,14 +142,13 @@ export default function ItemFormModal({ item, categories, defaultCategoryId, onC
       if (isEdit) await update.mutateAsync({ id: item.id, payload });
       else await create.mutateAsync(payload);
 
-      // Saved: the old file (if any) is now safe to delete, and the new one is
-      // no longer "staged" so cancel-cleanup must not touch it.
+      // Saved: anything the row no longer points at is safe to remove. Guard
+      // on `kept` so we never delete the file we just committed to.
       const kept = form.image_path;
-      for (const p of staged.current.added) if (p !== kept) await removeMenuImage(p);
-      if (staged.current.replaced && staged.current.replaced !== kept) {
-        await removeMenuImage(staged.current.replaced);
-      }
-      staged.current = { added: [], replaced: null };
+      const stale = [...staged.current.added, ...staged.current.orphans];
+      for (const p of new Set(stale)) if (p !== kept) await removeMenuImage(p);
+
+      staged.current = { added: [], orphans: [] };
       onClose();
     } catch (err) {
       setError(err.message || 'Could not save.');
@@ -212,7 +231,10 @@ export default function ItemFormModal({ item, categories, defaultCategoryId, onC
                 {form.image_url && (
                   <button
                     type="button"
-                    onClick={() => setForm((f) => ({ ...f, image_url: '', image_path: null }))}
+                    onClick={() => {
+                      detach(form.image_path);
+                      setForm((f) => ({ ...f, image_url: '', image_path: null }));
+                    }}
                     className="text-xs text-cream/40 underline underline-offset-4 hover:text-amber transition"
                   >
                     Remove photo
@@ -225,7 +247,11 @@ export default function ItemFormModal({ item, categories, defaultCategoryId, onC
             <label className={`${LABEL} mt-5`} htmlFor="i-url">…or paste an image URL</label>
             <input
               id="i-url" value={form.image_url}
-              onChange={(e) => setForm((f) => ({ ...f, image_url: e.target.value, image_path: null }))}
+              onChange={(e) => {
+                // Typing a URL detaches whatever file the row pointed at.
+                detach(form.image_path);
+                setForm((f) => ({ ...f, image_url: e.target.value, image_path: null }));
+              }}
               className={FIELD} placeholder="https://…"
             />
           </div>
