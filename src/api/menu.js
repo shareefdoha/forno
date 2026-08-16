@@ -1,8 +1,14 @@
-import { requireSupabase, IMAGE_BUCKET } from '../lib/supabase';
+import { requireSupabase, isSupabaseConfigured, IMAGE_BUCKET } from '../lib/supabase';
+import { DEMO_CATEGORIES, DEMO_ITEMS } from '../lib/demoData';
 
 /* ══════════════════════════════ READ ══════════════════════════════ */
 
 export async function fetchCategories({ onlyActive = true } = {}) {
+  // No .env yet — serve the original static menu so the site is viewable.
+  if (!isSupabaseConfigured) {
+    return onlyActive ? DEMO_CATEGORIES.filter((c) => c.is_active) : DEMO_CATEGORIES;
+  }
+
   let q = requireSupabase()
     .from('categories')
     .select('id, slug, name_en, name_ar, sort_order, is_active')
@@ -21,6 +27,10 @@ export async function fetchCategories({ onlyActive = true } = {}) {
  * network round-trip on every tab click.
  */
 export async function fetchMenuItems({ categoryId = null } = {}) {
+  if (!isSupabaseConfigured) {
+    return categoryId ? DEMO_ITEMS.filter((i) => i.category_id === categoryId) : DEMO_ITEMS;
+  }
+
   let q = requireSupabase()
     .from('menu_items')
     .select(

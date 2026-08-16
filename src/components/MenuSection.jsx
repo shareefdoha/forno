@@ -49,42 +49,35 @@ export default function MenuSection() {
           <p className="mt-5 text-cream/60">{t('menu.sub')}</p>
         </div>
 
-        {/* Not connected to Supabase yet — show what to do rather than an
-            empty grid or a blank page. */}
-        {!isSupabaseConfigured ? (
-          <div className="glass-card mx-auto mt-12 max-w-xl rounded-3xl p-8 text-center">
-            <p className="eyebrow">Setup needed</p>
-            <p className="mt-4 text-sm leading-relaxed text-cream/70">
-              The menu loads from Supabase. Copy <code className="text-amber">.env.example</code> to{' '}
-              <code className="text-amber">.env</code>, add your project URL and anon key, then
-              restart the dev server.
-            </p>
-            <p className="mt-3 text-xs text-cream/40">Full walkthrough in SETUP.md</p>
-          </div>
-        ) : (
-          <>
-            {/* tabs */}
-            {categories.data?.length > 0 && (
-              <CategoryTabs categories={categories.data} activeId={activeId} onChange={setActiveId} />
-            )}
+        {/* Reading from the bundled preview data, not a database. Say so
+            plainly so nobody mistakes this for a live CMS. */}
+        {!isSupabaseConfigured && (
+          <p className="mx-auto mt-10 max-w-xl rounded-2xl border border-amber/25 bg-amber/[.06] px-5 py-3 text-center text-xs leading-relaxed text-cream/60">
+            Preview data — edits in the CMS won’t save yet. Connect Supabase in{' '}
+            <code className="text-amber">.env</code> to go live. See SETUP.md
+          </p>
+        )}
 
-            {/* grid */}
-            <div id="dishes" className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {isLoading && <SkeletonCards />}
+        {/* tabs */}
+        {categories.data?.length > 0 && (
+          <CategoryTabs categories={categories.data} activeId={activeId} onChange={setActiveId} />
+        )}
 
-              {!isLoading &&
-                visible.map((item, k) => (
-                  // Re-keying on the active category replays the stagger animation
-                  // the same way the old innerHTML swap did.
-                  <MenuItem key={`${activeId}-${item.id}`} item={item} index={k} />
-                ))}
-            </div>
+        {/* grid */}
+        <div id="dishes" className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {isLoading && <SkeletonCards />}
 
-            {error && <p className="mt-10 text-center text-sm text-cream/50">{t('menu.error')}</p>}
-            {!isLoading && !error && visible.length === 0 && (
-              <p className="mt-10 text-center text-sm text-cream/50">{t('menu.empty')}</p>
-            )}
-          </>
+          {!isLoading &&
+            visible.map((item, k) => (
+              // Re-keying on the active category replays the stagger animation
+              // the same way the old innerHTML swap did.
+              <MenuItem key={`${activeId}-${item.id}`} item={item} index={k} />
+            ))}
+        </div>
+
+        {error && <p className="mt-10 text-center text-sm text-cream/50">{t('menu.error')}</p>}
+        {!isLoading && !error && visible.length === 0 && (
+          <p className="mt-10 text-center text-sm text-cream/50">{t('menu.empty')}</p>
         )}
 
         <div ref={footRef} className="reveal mt-14 text-center">
