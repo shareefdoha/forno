@@ -4,7 +4,7 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 
-import { db, q, one, migrate, UPLOAD_DIR, ROOT } from './db.js';
+import { db, q, one, exec, migrate, UPLOAD_DIR, ROOT } from './db.js';
 import { seedMenu } from './seed.js';
 import {
   createUser, verifyLogin, createSession, destroySession,
@@ -30,9 +30,9 @@ const wrap = (fn) => (req, res) => fn(req, res).catch((err) => {
 /* ════════════════════════════ health ════════════════════════════ */
 
 app.get('/api/health', wrap(async (_req, res) => {
-  const c = await one('select count(*)::int as n from categories');
-  const i = await one('select count(*)::int as n from menu_items');
-  res.json({ ok: true, database: 'postgres (pglite)', categories: c.n, items: i.n });
+  const c = await one('select count(*) as n from categories');
+  const i = await one('select count(*) as n from menu_items');
+  res.json({ ok: true, database: 'mysql', categories: Number(c.n), items: Number(i.n) });
 }));
 
 /* ════════════════════════════ auth ════════════════════════════ */
@@ -74,9 +74,10 @@ app.get('/api/categories', wrap(async (req, res) => {
 }));
 
 app.get('/api/menu-items', wrap(async (_req, res) => {
+  // price comes back as a JS number already — db.js's pool has decimalNumbers: true
   const rows = await q(
     `select id, category_id, name_en, name_ar, description_en, description_ar,
-            price::float8 as price, image_url, image_path, is_enabled, sort_order
+            price, image_url, image_path, is_enabled, sort_order
        from menu_items
       order by sort_order asc, name_en asc`,
   );
@@ -92,12 +93,14 @@ const ITEM_FIELDS = [
 
 app.post('/api/menu-items', requireAuth(), wrap(async (req, res) => {
   const b = req.body ?? {};
-  const row = await one(
+  const values = ITEM_FIELDS.map((f) => b[f] ?? (f === 'price' || f === 'sort_order' ? 0 : null));
+  const result = await exec(
     `insert into menu_items (${ITEM_FIELDS.join(', ')})
-     values (${ITEM_FIELDS.map((_, k) => `$${k + 1}`).join(', ')})
-     returning *, price::float8 as price`,
-    ITEM_FIELDS.map((f) => b[f] ?? (f === 'price' || f === 'sort_order' ? 0 : null)),
+     values (${ITEM_FIELDS.map((_, k) => `$${k + 1}`).join(', ')})`,
+    values,
   );
+  // MySQL has no RETURNING clause — fetch the row we just wrote by its new id.
+  const row = await one('select * from menu_items where id = $1', [result.insertId]);
   res.status(201).json(row);
 }));
 
@@ -107,19 +110,20 @@ app.patch('/api/menu-items/:id', requireAuth(), wrap(async (req, res) => {
   if (!fields.length) return res.status(400).json({ error: 'Nothing to update.' });
 
   const sets = fields.map((f, k) => `${f} = $${k + 1}`).join(', ');
-  const row = await one(
+  await exec(
     `update menu_items set ${sets}, updated_at = now()
-      where id = $${fields.length + 1}
-      returning *, price::float8 as price`,
+      where id = $${fields.length + 1}`,
     [...fields.map((f) => b[f]), req.params.id],
   );
+  const row = await one('select * from menu_items where id = $1', [req.params.id]);
   if (!row) return res.status(404).json({ error: 'That dish no longer exists.' });
   res.json(row);
 }));
 
 app.delete('/api/menu-items/:id', requireAuth(), wrap(async (req, res) => {
-  const row = await one('delete from menu_items where id = $1 returning image_path', [req.params.id]);
+  const row = await one('select image_path from menu_items where id = $1', [req.params.id]);
   if (!row) return res.status(404).json({ error: 'That dish no longer exists.' });
+  await exec('delete from menu_items where id = $1', [req.params.id]);
   if (row.image_path) {
     const file = path.join(UPLOAD_DIR, path.basename(row.image_path));
     fs.promises.unlink(file).catch(() => {});   // a missing file must not fail the delete
@@ -135,11 +139,12 @@ app.post('/api/categories', requireAuth(), wrap(async (req, res) => {
   const clash = await one('select id from categories where slug = $1', [b.slug]);
   if (clash) return res.status(409).json({ error: `A category with the slug "${b.slug}" already exists.` });
 
-  const row = await one(
+  const result = await exec(
     `insert into categories (slug, name_en, name_ar, sort_order, is_active)
-     values ($1,$2,$3,$4,$5) returning *`,
+     values ($1,$2,$3,$4,$5)`,
     [b.slug, b.name_en, b.name_ar ?? '', b.sort_order ?? 0, b.is_active ?? true],
   );
+  const row = await one('select * from categories where id = $1', [result.insertId]);
   res.status(201).json(row);
 }));
 
@@ -151,18 +156,20 @@ app.patch('/api/categories/:id', requireAuth(), wrap(async (req, res) => {
   if (!fields.length) return res.status(400).json({ error: 'Nothing to update.' });
 
   const sets = fields.map((f, k) => `${f} = $${k + 1}`).join(', ');
-  const row = await one(
-    `update categories set ${sets} where id = $${fields.length + 1} returning *`,
+  await exec(
+    `update categories set ${sets} where id = $${fields.length + 1}`,
     [...fields.map((f) => b[f]), req.params.id],
   );
+  const row = await one('select * from categories where id = $1', [req.params.id]);
   if (!row) return res.status(404).json({ error: 'That category no longer exists.' });
   res.json(row);
 }));
 
 app.delete('/api/categories/:id', requireAuth(), wrap(async (req, res) => {
   // ON DELETE CASCADE takes the dishes with it.
-  const row = await one('delete from categories where id = $1 returning id', [req.params.id]);
+  const row = await one('select id from categories where id = $1', [req.params.id]);
   if (!row) return res.status(404).json({ error: 'That category no longer exists.' });
+  await exec('delete from categories where id = $1', [req.params.id]);
   res.json({ ok: true });
 }));
 
@@ -226,9 +233,9 @@ async function start() {
   // First run creates the owner account. Set ADMIN_EMAIL / ADMIN_PASSWORD in
   // .env to choose them; otherwise a random password is generated and printed
   // here once, so it never sits in a file.
-  const existingUser = await one('select count(*)::int as n from users');
+  const existingUser = await one('select count(*) as n from users');
   let generated = null;
-  if (existingUser.n === 0) {
+  if (Number(existingUser.n) === 0) {
     const email = process.env.ADMIN_EMAIL || 'admin@forno.local';
     const password = process.env.ADMIN_PASSWORD || crypto.randomBytes(9).toString('base64url');
     if (!process.env.ADMIN_PASSWORD) generated = password;
@@ -237,8 +244,8 @@ async function start() {
     if (generated) console.log(`  Password: ${generated}    <-- save this now, it is not stored anywhere`);
   }
 
-  const c = await one('select count(*)::int as n from categories');
-  const i = await one('select count(*)::int as n from menu_items');
+  const c = await one('select count(*) as n from categories');
+  const i = await one('select count(*) as n from menu_items');
 
   const servingSite = fs.existsSync(path.join(DIST, 'index.html'));
 
@@ -249,8 +256,8 @@ async function start() {
 
   app.listen(PORT, HOST, () => {
     console.log(`\n  Forno ${servingSite ? 'site + API' : 'API'}  ->  http://${HOST}:${PORT}`);
-    console.log(`  Database   ->  PostgreSQL (PGlite), server/data/pgdata`);
-    console.log(`  Menu       ->  ${c.n} categories, ${i.n} dishes${seeded.skipped ? ' (already present)' : ' (seeded)'}`);
+    console.log(`  Database   ->  MySQL (${process.env.DB_NAME || 'unset DB_NAME'})`);
+    console.log(`  Menu       ->  ${Number(c.n)} categories, ${Number(i.n)} dishes${seeded.skipped ? ' (already present)' : ' (seeded)'}`);
     if (servingSite) console.log(`  Serving    ->  dist/ (production build)`);
     console.log('');
   });
