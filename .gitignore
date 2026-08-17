@@ -29,3 +29,7 @@ set-supabase-key.cmd
 
 # Local database + uploaded photos
 server/data/
+
+# Zipped copy of package-lock.json — 34MB of binary, and the lockfile it
+# archives is already tracked. Kept on disk, excluded from the repo.
+package-lock.zip
