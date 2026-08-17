@@ -5,13 +5,14 @@ main.js
 
 node_modules
 
-# dist/ IS committed. The host installs with NODE_ENV=production, which skips
-# devDependencies, so Vite isn't available there to build — the built frontend
-# ships in the repo instead and server/index.js serves it.
+# The built frontend is kept out of the repo deliberately. It is NOT built on
+# the host either — NODE_ENV=production makes npm skip devDependencies, so
+# Vite is not installed there. dist/ is built locally and uploaded by hand.
 #
-# Do not re-add `dist` here. Each build emits new content-hashed filenames
-# (index-<hash>.js); if they were ignored, `git add` would silently skip them
-# and dist/index.html would point at files that aren't in the repo.
+# Consequence: after any change under src/, run `npm run build` and upload the
+# new dist/ to the server. A git deploy alone will not update the site, and a
+# server with no dist/ serves a blank page on every route except /api.
+dist
 dist-ssr
 .env
 .env.local
