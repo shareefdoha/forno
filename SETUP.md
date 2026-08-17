@@ -1,14 +1,36 @@
-# Forno — React + local PostgreSQL
+# Forno — React + MySQL
 
-Your static `forno-redesign.html` is now a React app with a PostgreSQL-backed
-menu and an admin CMS at `/admin`. The visual design is unchanged: the Tailwind
+Your static `forno-redesign.html` is now a React app with a MySQL-backed menu
+and an admin CMS at `/admin`. The visual design is unchanged: the Tailwind
 tokens and your `<style>` block were carried over verbatim.
 
-**No cloud account is involved.** The database runs on this machine.
+**No cloud account is involved.** The database is MySQL — locally that is the
+one bundled with XAMPP; on the host it is the MySQL the hosting plan includes.
 
 ---
 
 ## Running it
+
+You need a MySQL server running locally (XAMPP's is fine) and a database for
+the app to use. Create it once:
+
+```sql
+CREATE DATABASE forno_local
+  CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+```
+
+Then point `.env` at it — these five are what `server/db.js` reads:
+
+```
+DB_HOST=localhost
+DB_PORT=3306
+DB_USER=root
+DB_PASSWORD=
+DB_NAME=forno_local
+```
+
+The tables are created for you on first start (`migrate()` in `server/db.js`),
+then seeded with the 15 categories and 67 dishes.
 
 ```bash
 npm install
@@ -42,15 +64,23 @@ in git. To change the password later, see *Managing the admin account* below.
 ## How it fits together
 
 ```
-Browser  ──>  Vite (5173)  ──proxy──>  Express API (3001)  ──>  PostgreSQL
+Browser  ──>  Vite (5173)  ──proxy──>  Express API (3001)  ──>  MySQL
                                               │
                                               └──>  server/data/uploads (photos)
 ```
 
-The database is **PGlite** — genuine PostgreSQL compiled to WebAssembly,
-running inside the Node process and persisting to `server/data/pgdata`. Same
-SQL, same types, same constraints as a server install, but nothing to install
-and no administrator rights needed.
+The database is **MySQL**, reached through `mysql2`'s connection pool. Route
+handlers are still written with Postgres-style `$1, $2` placeholders — `db.js`
+rewrites them to MySQL's `?` in `toMysql()`, so the call sites did not all have
+to be rewritten by hand when the project moved off PostgreSQL.
+
+Two consequences of that move worth knowing when reading the code:
+
+- MySQL has no `RETURNING`, so `exec()` hands back the result header
+  (`insertId`, `affectedRows`) and anything needing the written row does a
+  follow-up `one()` by id.
+- `DATETIME` columns want `'YYYY-MM-DD HH:MM:SS'`, so `auth.js` converts
+  through `toMysqlDatetime()` rather than passing an ISO string.
 
 Everything the CMS writes goes into that database and survives restarts.
 Nothing is stored in the browser except your session token.
@@ -119,10 +149,14 @@ To add a user or change a password without losing your menu, run this from the
 project root:
 
 ```bash
-node -e "import('./server/db.js').then(async m => { await m.db.waitReady; await m.migrate(); const a = await import('./server/auth.js'); console.log(await a.createUser('you@example.com','your-new-password')); process.exit(0) })"
+node server/reset-password.mjs you@example.com 'your-new-password'
 ```
 
-It creates the account, or updates the password if the email already exists.
+It creates the account, or updates the password if the email already exists, and
+deletes that user's existing sessions so any old login stops working.
+
+Use it when the generated first-run password is lost — it is the only way back
+in, since the password is stored as a scrypt hash and cannot be read back.
 
 ---
 
@@ -132,14 +166,17 @@ It creates the account, or updates the password if the email already exists.
 index.html                  Vite entry — <head>, fonts, #root
 vite.config.js              proxies /api and /uploads to the API server
 tailwind.config.js          your CDN config, unchanged
-.env                        optional ADMIN_EMAIL / ADMIN_PASSWORD (git-ignored)
+.env                        DB_* connection vars, optional ADMIN_EMAIL /
+                            ADMIN_PASSWORD and DATA_DIR (git-ignored)
 
 server/
   index.js                  Express API — auth, CRUD, uploads
-  db.js                     PGlite (PostgreSQL) + schema
+  db.js                     MySQL pool + schema, $1 → ? translation
   auth.js                   scrypt password hashing, session tokens
   seed.js                   loads the 15 categories and 67 dishes
-  data/                     the database and uploaded photos (git-ignored)
+  env.js                    loads .env before anything reads process.env
+  reset-password.mjs        create a user / reset a password from the CLI
+  data/                     uploaded photos (git-ignored)
 
 supabase/                   unused leftovers from the Supabase attempt;
                             safe to delete
@@ -178,10 +215,25 @@ src/
 
 ## Backing up
 
-Everything lives in **`server/data/`** — the database and every uploaded photo.
-Copy that folder and you have a complete backup. Restore by copying it back.
+A backup is **two** things now, because the database is no longer a folder:
 
-It's git-ignored, so it is **not** in your repository. Back it up separately.
+1. **The database** — dump it:
+
+   ```bash
+   mysqldump -u root forno_local > forno-backup.sql
+   ```
+
+   Restore with `mysql -u root forno_local < forno-backup.sql`.
+
+2. **The uploaded photos** — copy `server/data/uploads/` (or `$DATA_DIR/uploads/`
+   if `DATA_DIR` is set, which it is on the host).
+
+Both are git-ignored, so neither is in your repository. Back them up separately.
+
+> Copying `server/data/` alone used to be a complete backup, when the database
+> was a PGlite folder inside it. It no longer is — that folder now holds only
+> photos, and a backup without the dump above has no menu, categories or logins
+> in it.
 
 ---
 
@@ -203,42 +255,62 @@ fails with `No output directory found after build`. Even when pointed at
 
 1. **Node.js app** → application root = the project folder, **startup file =
    `server/index.js`**, Node version **20 or newer**.
-2. Set the environment variables in the panel:
+2. Create a MySQL database and user in hPanel's **Databases** section, then set
+   the environment variables — either in the panel or in a `.env` file inside
+   the app folder (`server/env.js` reads it, and real environment variables win
+   over the file, so don't set the same name in both):
 
    | Variable | Value |
    |---|---|
-   | `DATA_DIR` | `/home/<user>/forno-data` — outside the app folder, so a redeploy can't wipe it |
+   | `DB_HOST` | `127.0.0.1` |
+   | `DB_PORT` | `3306` |
+   | `DB_USER` | the database user hPanel created |
+   | `DB_PASSWORD` | its password |
+   | `DB_NAME` | the database hPanel created |
+   | `DATA_DIR` | `/home/<user>/forno-data` — outside the app folder, so a redeploy can't wipe the photos |
    | `ADMIN_EMAIL` | the owner's login |
    | `ADMIN_PASSWORD` | set it here, never in a committed file |
    | `NODE_ENV` | `production` |
 
    Leave `PORT` alone — the panel injects it and the server reads it.
-3. Build the frontend over SSH, from the app folder:
+
+   Fill in `ADMIN_EMAIL` / `ADMIN_PASSWORD` or leave them out entirely. Copying
+   the example file's `<your-email>` placeholders verbatim creates an account
+   literally named `<your-email>`, which you cannot receive mail at.
+3. Upload the frontend. `dist/` is git-ignored, so a `git pull` on the host will
+   never produce or update it — build locally and copy it up:
 
    ```
-   npm run build:host
+   npm run build
+   tar czf - dist | ssh -p <port> <user>@<host> "cd ~/<app-folder> && tar xzf -"
    ```
 
-   Use that script rather than `npm run build`. `NODE_ENV=production` makes
-   `npm install` skip devDependencies, and Vite is one of them — plain
-   `npm run build` fails with `vite: not found`. `build:host` reinstalls them
-   first.
+   Repeat after every change under `src/`. Because `dist/` is ignored rather
+   than tracked, an uploaded copy survives later pulls.
+
+   Building on the host with `npm run build:host` also works if you'd rather —
+   it exists because `NODE_ENV=production` makes `npm install` skip
+   devDependencies, Vite among them, so plain `npm run build` there fails with
+   `vite: not found`. `build:host` reinstalls them first.
 4. Restart the app, then check `https://<your-domain>/api/health`. It should
-   return `{"ok":true, ... "categories":15,"items":67}`.
+   return `{"ok":true,"database":"mysql","categories":15,"items":67}`.
 
 If the site 404s but `/api/health` answers, `dist/` is missing — step 3 didn't
 run. The startup log says so explicitly.
 
+If the app dies at startup with `ER_ACCESS_DENIED_ERROR` for user `''`, the
+`DB_*` variables never reached it: `db.js` fell back to its defaults with an
+empty user. Check the panel variables, or that `.env` sits in the app root.
+
 ### Data and backups
 
-Everything persistent lives under `DATA_DIR`: the database in `pgdata/` and
-uploaded photos in `uploads/`. Keep it outside the deploy folder and back it up
-separately — it is not in the repository.
+Persistent state is split in two: the menu, categories, users and sessions live
+in **MySQL**, and uploaded photos live under **`DATA_DIR/uploads`**. Keep
+`DATA_DIR` outside the deploy folder so a redeploy cannot wipe it, and back up
+both halves (see *Backing up* above) — neither is in the repository.
 
-PGlite is **single-process**. If the panel ever runs more than one instance of
-the app, two processes opening the same `pgdata/` will corrupt it. Keep the
-instance count at 1, or move to the MySQL server the hosting plan already
-includes.
+Unlike the PGlite setup this replaced, MySQL is a real server and handles
+concurrent connections, so the app is no longer limited to a single instance.
 
 ---
 
@@ -247,10 +319,13 @@ includes.
 | Symptom | Cause |
 |---|---|
 | "Cannot reach the API server" | The API isn't running — use `npm run dev`, not `npm run dev:web` |
+| API won't start, `ER_ACCESS_DENIED_ERROR` | Wrong or missing `DB_*` vars in `.env`. An empty user (`''@'localhost'`) means they were never set at all |
+| API won't start, `ER_BAD_DB_ERROR` | `DB_NAME` points at a database that doesn't exist — create it, the tables build themselves |
+| API won't start, `ECONNREFUSED` | MySQL isn't running (start it in XAMPP), or `DB_PORT` is wrong |
 | Menu empty, no error | Database seeded but every dish is disabled, or every category hidden |
-| Login says "Wrong email or password" | Wrong credentials, or `server/data/pgdata` was deleted and rebuilt with different ones |
+| Login says "Wrong email or password" | Wrong credentials, or `DB_NAME` points at a fresh database whose first run generated different ones — reset with `server/reset-password.mjs` |
 | Signed out unexpectedly | Session older than 14 days, or the database was reset |
-| Uploads fail | `server/data/uploads` isn't writable |
+| Uploads fail | `server/data/uploads` (or `$DATA_DIR/uploads`) isn't writable |
 | Deploy says `No output directory found after build` | Deployed as a static site — use the Node.js app instead (see Deploying) |
 | Live site 404s but `/api/health` answers | `dist/` was never built on the host — run `npm run build:host` |
 | `vite: not found` on the host | `NODE_ENV=production` skipped devDependencies — use `build:host`, not `build` |
