@@ -259,6 +259,14 @@ async function start() {
     console.log(`  Database   ->  MySQL (${process.env.DB_NAME || 'unset DB_NAME'})`);
     console.log(`  Menu       ->  ${Number(c.n)} categories, ${Number(i.n)} dishes${seeded.skipped ? ' (already present)' : ' (seeded)'}`);
     if (servingSite) console.log(`  Serving    ->  dist/ (production build)`);
+    // In dev this is normal — Vite serves the app on 5173. On a host it means
+    // the build never ran, and every page except /api would 404 with no clue
+    // why, so say so plainly here.
+    else if (process.env.NODE_ENV === 'production') {
+      console.log(`  Serving    ->  NOTHING: ${DIST}/index.html is missing.`);
+      console.log(`                 Run \`npm run build:host\` - without it the API`);
+      console.log(`                 answers but every page returns 404.`);
+    }
     console.log('');
   });
 }
