@@ -1,5 +1,5 @@
 import crypto from 'node:crypto';
-import { q, one } from './db.js';
+import { q, one, exec } from './db.js';
 
 /* Password hashing uses Node's built-in scrypt — no native modules to compile,
    and it's a memory-hard KDF rather than a bare hash. */
@@ -18,12 +18,16 @@ function hash(password, salt) {
 export async function createUser(email, password) {
   const salt = crypto.randomBytes(16).toString('hex');
   const password_hash = await hash(password, salt);
-  return one(
+  const normalizedEmail = email.trim().toLowerCase();
+  // MySQL has no RETURNING clause, and no ON CONFLICT — the MySQL equivalent
+  // for "insert, or update if the email already exists" is ON DUPLICATE KEY
+  // UPDATE (relies on the UNIQUE constraint on users.email).
+  await exec(
     `insert into users (email, password_hash, salt) values ($1, $2, $3)
-     on conflict (email) do update set password_hash = excluded.password_hash, salt = excluded.salt
-     returning id, email`,
-    [email.trim().toLowerCase(), password_hash, salt],
+     on duplicate key update password_hash = values(password_hash), salt = values(salt)`,
+    [normalizedEmail, password_hash, salt],
   );
+  return one('select id, email from users where email = $1', [normalizedEmail]);
 }
 
 export async function verifyLogin(email, password) {
@@ -41,13 +45,20 @@ export async function verifyLogin(email, password) {
 
 const SESSION_DAYS = 14;
 
+// MySQL's DATETIME columns want 'YYYY-MM-DD HH:MM:SS', not JS's
+// toISOString() ('YYYY-MM-DDTHH:MM:SS.sssZ') — Postgres accepted the ISO
+// string directly, MySQL rejects it with "Incorrect datetime value".
+function toMysqlDatetime(date) {
+  return date.toISOString().slice(0, 19).replace('T', ' ');
+}
+
 export async function createSession(userId) {
   const token = crypto.randomBytes(32).toString('hex');
   const expires = new Date(Date.now() + SESSION_DAYS * 864e5);
   await q('insert into sessions (token, user_id, expires_at) values ($1, $2, $3)', [
     token,
     userId,
-    expires.toISOString(),
+    toMysqlDatetime(expires),
   ]);
   return { token, expires_at: expires.toISOString() };
 }
