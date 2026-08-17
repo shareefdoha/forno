@@ -11,6 +11,12 @@ export default defineConfig({
   server: {
     port: 5173,
     open: true,
+    watch: {
+      // Vite watches the whole project folder. A large archive or the local
+      // database being written inside it makes the watcher throw EBUSY on
+      // Windows and take the dev server down with it.
+      ignored: ['**/*.zip', '**/*.7z', '**/*.rar', '**/server/data/**'],
+    },
     proxy: {
       '/api': { target: API, changeOrigin: true },
       '/uploads': { target: API, changeOrigin: true },
