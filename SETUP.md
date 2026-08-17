@@ -187,20 +187,58 @@ It's git-ignored, so it is **not** in your repository. Back it up separately.
 
 ## Deploying
 
-This is no longer a static site. `npm run build` produces `dist/`, but the app
-needs the API running to show anything, so you need a host that runs Node
-(Railway, Render, Fly.io, a VPS) rather than static hosting.
+This is **not** a static site. The browser gets every dish from `/api`, so a
+host that only publishes `dist/` gives you an empty menu, the message "Cannot
+reach the API server", and a dead admin login. It needs a host that runs Node.
 
-To deploy you would:
+`server/index.js` already serves `dist/` itself, so one process is the whole
+site — no separate web server, no reverse proxy to configure.
 
-1. Serve `dist/` as static files from the Express app (a few lines in `server/index.js`)
-2. Run `node server/index.js` on the host
-3. Persist `server/data/` on a real disk or volume — on ephemeral filesystems
-   the database is wiped on every redeploy
+### Hostinger (Node.js app)
 
-PGlite is single-process, which is fine for one restaurant site. If you ever
-need multiple server instances, move to a normal PostgreSQL server — the schema
-in `server/db.js` transfers unchanged.
+Use hPanel's **Node.js app** section. Do *not* use the GitHub/static website
+deploy — that pipeline builds the project, looks for a folder to publish, and
+fails with `No output directory found after build`. Even when pointed at
+`dist/` it only uploads the frontend and leaves the API behind.
+
+1. **Node.js app** → application root = the project folder, **startup file =
+   `server/index.js`**, Node version **20 or newer**.
+2. Set the environment variables in the panel:
+
+   | Variable | Value |
+   |---|---|
+   | `DATA_DIR` | `/home/<user>/forno-data` — outside the app folder, so a redeploy can't wipe it |
+   | `ADMIN_EMAIL` | the owner's login |
+   | `ADMIN_PASSWORD` | set it here, never in a committed file |
+   | `NODE_ENV` | `production` |
+
+   Leave `PORT` alone — the panel injects it and the server reads it.
+3. Build the frontend over SSH, from the app folder:
+
+   ```
+   npm run build:host
+   ```
+
+   Use that script rather than `npm run build`. `NODE_ENV=production` makes
+   `npm install` skip devDependencies, and Vite is one of them — plain
+   `npm run build` fails with `vite: not found`. `build:host` reinstalls them
+   first.
+4. Restart the app, then check `https://<your-domain>/api/health`. It should
+   return `{"ok":true, ... "categories":15,"items":67}`.
+
+If the site 404s but `/api/health` answers, `dist/` is missing — step 3 didn't
+run. The startup log says so explicitly.
+
+### Data and backups
+
+Everything persistent lives under `DATA_DIR`: the database in `pgdata/` and
+uploaded photos in `uploads/`. Keep it outside the deploy folder and back it up
+separately — it is not in the repository.
+
+PGlite is **single-process**. If the panel ever runs more than one instance of
+the app, two processes opening the same `pgdata/` will corrupt it. Keep the
+instance count at 1, or move to the MySQL server the hosting plan already
+includes.
 
 ---
 
@@ -213,4 +251,7 @@ in `server/db.js` transfers unchanged.
 | Login says "Wrong email or password" | Wrong credentials, or `server/data/pgdata` was deleted and rebuilt with different ones |
 | Signed out unexpectedly | Session older than 14 days, or the database was reset |
 | Uploads fail | `server/data/uploads` isn't writable |
+| Deploy says `No output directory found after build` | Deployed as a static site — use the Node.js app instead (see Deploying) |
+| Live site 404s but `/api/health` answers | `dist/` was never built on the host — run `npm run build:host` |
+| `vite: not found` on the host | `NODE_ENV=production` skipped devDependencies — use `build:host`, not `build` |
 | Port 3001 in use | Set `API_PORT` in `.env` and update the proxy target in `vite.config.js` |
