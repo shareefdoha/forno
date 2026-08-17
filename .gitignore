@@ -4,7 +4,14 @@ main.css
 main.js
 
 node_modules
-dist
+
+# dist/ IS committed. The host installs with NODE_ENV=production, which skips
+# devDependencies, so Vite isn't available there to build — the built frontend
+# ships in the repo instead and server/index.js serves it.
+#
+# Do not re-add `dist` here. Each build emits new content-hashed filenames
+# (index-<hash>.js); if they were ignored, `git add` would silently skip them
+# and dist/index.html would point at files that aren't in the repo.
 dist-ssr
 .env
 .env.local
