@@ -274,9 +274,12 @@ fails with `No output directory found after build`. Even when pointed at
 
    Leave `PORT` alone — the panel injects it and the server reads it.
 
-   Fill in `ADMIN_EMAIL` / `ADMIN_PASSWORD` or leave them out entirely. Copying
-   the example file's `<your-email>` placeholders verbatim creates an account
-   literally named `<your-email>`, which you cannot receive mail at.
+   Fill in `ADMIN_EMAIL` / `ADMIN_PASSWORD` with real values or leave them out
+   entirely — leaving them unset makes the server generate a random password and
+   print it once at startup. What does not work is a placeholder: a value like
+   `<a password>` is used literally, so you get an account you cannot sign in to
+   or receive mail at. This is not hypothetical; the first Hostinger deployment
+   of this project shipped with exactly that.
 3. Upload the frontend. `dist/` is git-ignored, so a `git pull` on the host will
    never produce or update it — build locally and copy it up:
 
